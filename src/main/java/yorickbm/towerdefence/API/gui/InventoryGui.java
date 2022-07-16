@@ -1,9 +1,7 @@
-package yorickbm.towerdefence.gui.API;
+package yorickbm.towerdefence.API.gui;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
@@ -15,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 public abstract class InventoryGui {
 

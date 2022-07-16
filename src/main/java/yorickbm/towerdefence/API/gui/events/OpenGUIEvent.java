@@ -1,4 +1,4 @@
-package yorickbm.towerdefence.gui.API.events;
+package yorickbm.towerdefence.API.gui.events;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -7,13 +7,10 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import yorickbm.towerdefence.gui.API.GuiEventRegistry;
-import yorickbm.towerdefence.gui.API.InventoryGui;
+import yorickbm.towerdefence.API.gui.GuiEventRegistry;
+import yorickbm.towerdefence.API.gui.InventoryGui;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 

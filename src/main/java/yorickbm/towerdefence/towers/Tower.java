@@ -7,6 +7,7 @@ import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.Core;
 import yorickbm.towerdefence.arena.Arena;
+import yorickbm.towerdefence.towers.Schematic.TowerSchematic;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,17 +20,19 @@ import java.util.logging.Level;
  */
 public abstract class Tower {
 
-    public String Name = "";
-    public String Description = "";
-    public Material icon = Material.CHEST_MINECART;
+    protected String Name = "";
+    protected String Description = "";
+    protected Material icon = Material.CHEST;
 
-    public int TowerLevel = 1;
-    public int Range = 0;
-    public int Cooldown = 5;
+    protected int TowerLevel = 1;
+    protected int Range = 0;
+    protected int Cooldown = 5;
 
     private TDLocation _location;
     private Arena _activeArena;
     private Method[] _triggersForLevel;
+
+    protected TowerSchematic schematic;
 
     public Tower() {
         List<Pair<Method, TowerLevel>> _collectedData = new ArrayList<>();

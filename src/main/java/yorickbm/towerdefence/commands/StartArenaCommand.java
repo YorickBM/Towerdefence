@@ -17,13 +17,14 @@ public class StartArenaCommand implements CommandExecutor {
             //TODO check permission
         }
 
+        //TODO negate argument if they them self are joined in an arena. Then we just start the one they are in!
         if(args.length < 1) {
             sender.sendMessage("Please enter the number of the arena you want to start!");
             return false;
         }
 
         int arena = 0;
-        if(args[0].equals("random")) arena = new Random().nextInt(Core.getInstance().getArenas().size());
+        if(args[0].equals("random")) arena = new Random().nextInt(Core.getInstance().getArenas().size()-1);
         else arena = Integer.parseInt(args[0]);
 
         if(arena > Core.getInstance().getArenas().size()) {

@@ -1,4 +1,4 @@
-package yorickbm.towerdefence.gui.API;
+package yorickbm.towerdefence.API.gui;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

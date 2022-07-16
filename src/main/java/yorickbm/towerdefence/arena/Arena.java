@@ -81,6 +81,9 @@ public class Arena {
         _entities = new ArrayList<>();
         _cornersA = new ArrayList<>();
         _cornersB = new ArrayList<>();
+
+        _chunksA = new ArrayList<>();
+        _chunksB = new ArrayList<>();
     }
 
     public void spawnNextWave() {

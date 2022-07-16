@@ -7,13 +7,16 @@ authors: [ yorickBM ]
 commands:
   startArena:
     description: Start an arena
-    usage: <command> <id>
+    usage: /<command> <id>
   joinArena:
     description: Join an arena
-    usage: <command> <id>
+    usage: /<command> <id>
   stopArena:
     description: Stop an arena
-    usage: <command> <id>
+    usage: /<command> <id>
+  createTower:
+    description: Stop an arena
+    usage: /<command> <x1> <y1> <z1> <x2> <y2> <z2>
 
 #Spigot.yml adjust mob-spawn-range to 0
 #Spigot.yml adjust entity-activation-range -> animals & monsters to 132 or higher for bigger game maps!

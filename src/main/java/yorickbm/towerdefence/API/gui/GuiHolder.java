@@ -1,4 +1,4 @@
-package yorickbm.towerdefence.gui.API;
+package yorickbm.towerdefence.API.gui;
 
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;

@@ -3,6 +3,7 @@ package yorickbm.towerdefence.towers;
 import org.bukkit.Material;
 import yorickbm.towerdefence.API.Annotations.TowerLevel;
 import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.towers.Schematic.TowerSchematic;
 
 import java.util.logging.Level;
 
@@ -18,6 +19,8 @@ public class BombTower extends Tower {
         super.Name = "Bomb Tower";
         super.Description = "Bomb all near by mobs! Dealing damage";
         super.Range = 5;
+
+        super.schematic = new TowerSchematic("");
     }
 
     @TowerLevel(level = 1)

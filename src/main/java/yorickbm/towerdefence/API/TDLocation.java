@@ -1,5 +1,7 @@
 package yorickbm.towerdefence.API;
 
+import org.bukkit.Location;
+
 /**
  * Last modified by: YorickBM on 27-06-2022
  */
@@ -13,6 +15,9 @@ public class TDLocation {
         this.z = z;
     }
     public TDLocation() {}
+    public TDLocation(Location location) {
+        this(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    }
 
     public TDLocation fromString(String location) {
         x = Float.parseFloat(location.split(";")[0]);

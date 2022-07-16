@@ -1,4 +1,4 @@
-package yorickbm.towerdefence.gui.API;
+package yorickbm.towerdefence.API.gui;
 
 import java.util.ArrayList;
 import java.util.List;
