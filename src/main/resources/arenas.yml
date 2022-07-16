@@ -1,0 +1,2 @@
+arenas:
+  - "{spawnDirection='NORTH',directionBlock='MAGENTA_GLAZED_TERRACOTTA',finishBlock='YELLOW_GLAZED_TERRACOTTA',buildBlock='CYAN_TERRACOTTA',arenaWorld='world',spawnTeamA='-51;68; 137',spawnTeamB='-111;68; 137',lobbyLocation='-30;65;124',lobbyWorld='world'}"

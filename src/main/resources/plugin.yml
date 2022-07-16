@@ -1,0 +1,21 @@
+name: Towerdefence
+version: ${project.version}
+main: yorickbm.towerdefence.Core
+api-version: 1.19
+prefix: Towerdefence
+authors: [ yorickBM ]
+commands:
+  startArena:
+    description: Start an arena
+    usage: <command> <id>
+  joinArena:
+    description: Join an arena
+    usage: <command> <id>
+  stopArena:
+    description: Stop an arena
+    usage: <command> <id>
+
+#Spigot.yml adjust mob-spawn-range to 0
+#Spigot.yml adjust entity-activation-range -> animals & monsters to 132 or higher for bigger game maps!
+  # (Test by spawning a wave & see if the mob reaches it end when you stand there)
+  # Raiders & Misc to 1 to minimize performance issues!!!
