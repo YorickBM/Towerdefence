@@ -16,26 +16,34 @@ public class StopArenaCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 
-        if(sender instanceof Player) {
-            //TODO check permission
-        }
-
-        if(args.length < 1) {
-            sender.sendMessage("Please enter the number of the arena you want to start!");
-            return false;
-        }
-
         int arena = 0;
-        if(args[0].equals("random")) arena = new Random().nextInt(Core.getInstance().getArenas().size());
-        else arena = Integer.parseInt(args[0]);
+        if (sender instanceof Player) {
+            //TODO check permission
 
-        if(arena > Core.getInstance().getArenas().size()) {
-            sender.sendMessage("The number you entered is not a valid arena!");
-            return false;
+            if (!Core.getInstance().isPlayerInArena((Player) sender) && args.length < 1) {
+                sender.sendMessage("Please enter the number of the arena you want to start!");
+                return false;
+            } else if (args.length < 1) {
+                arena = Core.getInstance().getArenaForPlayer((Player) sender).getID();
+            } else {
+                arena = Integer.parseInt(args[0]);
+            }
+        } else {
+            if(args.length < 1) {
+                sender.sendMessage("Please give us an arena to start!");
+                return false;
+            }
+            arena = Integer.parseInt(args[0]);
         }
 
-        Arena arenaClass = Core.getInstance().getArenas().get(arena-1);
+        Arena arenaClass = Core.getInstance().getArena(arena);
+
+        if(arenaClass == null) {
+            sender.sendMessage("Could not find the arena you would like to start!");
+            return true;
+        }
         arenaClass.clean();
+        sender.sendMessage("Arena has been stoped!");
 
         return true;
     }

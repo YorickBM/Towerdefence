@@ -16,27 +16,36 @@ public class StartArenaCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 
+        int arena = 0;
+
         if(sender instanceof Player) {
             //TODO check permission
+
+            if(!Core.getInstance().isPlayerInArena((Player)sender) && args.length < 1) {
+                sender.sendMessage("Please enter the number of the arena you want to start!");
+                return false;
+            } else if(args.length < 1) {
+                arena = Core.getInstance().getArenaForPlayer((Player)sender).getID();
+            } else {
+                arena = Integer.parseInt(args[0]);
+            }
+        } else {
+            if(args.length < 1) {
+                sender.sendMessage("Please give us an arena to start!");
+                return false;
+            }
+            arena = Integer.parseInt(args[0]);
         }
 
-        //TODO negate argument if they them self are joined in an arena. Then we just start the one they are in!
-        if(args.length < 1) {
-            sender.sendMessage("Please enter the number of the arena you want to start!");
-            return false;
+        Arena arenaClass = Core.getInstance().getArena(arena);
+
+        if(arenaClass == null) {
+            sender.sendMessage("Could not find the arena you would like to start!");
+            return true;
         }
 
-        int arena = 0;
-        if(args[0].equals("random")) arena = new Random().nextInt(Core.getInstance().getArenas().size()-1);
-        else arena = Integer.parseInt(args[0]);
-
-        if(arena > Core.getInstance().getArenas().size()) {
-            sender.sendMessage("The number you entered is not a valid arena!");
-            return false;
-        }
-
-        Arena arenaClass = Core.getInstance().getArenas().get(arena-1);
         arenaClass.prepare();
+        sender.sendMessage("Arena has been started!");
 
         return true;
     }

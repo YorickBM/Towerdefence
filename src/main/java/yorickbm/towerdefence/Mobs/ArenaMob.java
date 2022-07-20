@@ -1,10 +1,15 @@
 package yorickbm.towerdefence.Mobs;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import yorickbm.towerdefence.Core;
 import yorickbm.towerdefence.arena.Arena;
 
 import java.util.List;
@@ -14,11 +19,12 @@ import java.util.List;
  */
 public abstract class ArenaMob {
 
-    protected LivingEntity entity;
+    protected Entity entity;
     protected Arena arena;
     protected float tick_speed = 0.03f;
     protected List<Block> path;
     private int step_index = 0;
+    protected EntityType entityType;
 
     protected BukkitRunnable tickUpdater = new BukkitRunnable() {
         @Override
@@ -61,9 +67,17 @@ public abstract class ArenaMob {
         }
     };
 
-    public abstract void spawn(Location location);
+    public Entity spawn(Location location) {
+
+        entity = location.getWorld().spawnEntity(location, entityType);
+        tickUpdater.runTaskTimer(Core.getInstance(), 20, 1);
+
+        return entity;
+    }
 
     public void destroy() {
-        entity.damage(entity.getHealth());
+        if(entity.isDead()) return;
+        LivingEntity le = ((LivingEntity)entity);
+        le.damage(le.getHealth());
     }
 }

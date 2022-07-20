@@ -10,7 +10,7 @@ commands:
     usage: /<command> <id>
   joinArena:
     description: Join an arena
-    usage: /<command> <id>
+    usage: /<command> <id> [player]
   stopArena:
     description: Stop an arena
     usage: /<command> <id>

@@ -37,7 +37,6 @@ public class ConfigManager {
         try {
             this.Setup.save(this.Setupf);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
         }
         return this;
     }

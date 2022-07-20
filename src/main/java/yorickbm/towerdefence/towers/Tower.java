@@ -3,10 +3,12 @@ package yorickbm.towerdefence.towers;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 import yorickbm.towerdefence.API.Annotations.TowerLevel;
 import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
@@ -96,20 +98,85 @@ public abstract class Tower {
         _activeArena = arena;
         TowerLevel = 1;
 
+        Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), location.getX(), location.getY(), location.getZ());
+
         //Check if building is spawnable
         Material allowedMaterial = getArena().getBuildMaterial();
-        //TODO check if material below tower is correct.
-        //TODO Spawn tower schematic
 
-        //Temp icon block spawn to showcase its there
-        Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), location.getX(), location.getY(), location.getZ());
+        List<Pair<Block, Material>> _blocksBelow = new ArrayList<>();
+        for(int x = -1; x <= 1; x++) {
+            for(int z = -1; z <= 1; z++) {
+                Block block = relativeLocation.clone().add(x, -1, z).getBlock();
+                _blocksBelow.add(new Pair<>(block, block.getType())); //Add block to array of 3x3
+            }
+        }
+
+        if(_blocksBelow.stream().map((d) -> d.getKey()).filter(block -> block.getType() != allowedMaterial).findAny().isPresent()) {
+
+            List<Pair<Block,Material>> altered = _blocksBelow.stream().map(d -> { d.setKey(getFirstBelowAir(d.getKey())); d.setValue(d.getKey().getType()); return d;}).collect(Collectors.toList());
+
+            List<BukkitRunnable> errorsRunnables = new ArrayList<>();
+            for(int i = 0; i < 4; i++) { //Run a checkers pattern!
+                errorsRunnables.add(new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        int index = 0;
+                        for (Block block : altered.stream().map(d -> d.getKey()).collect(Collectors.toList())) {
+                            block.setType(index++ % 2 == 0 ? Material.BLACK_WOOL : Material.YELLOW_WOOL);
+                        }
+                    }
+                });
+                errorsRunnables.add(new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        int index = 0;
+                        for (Block block : altered.stream().map(d -> d.getKey()).collect(Collectors.toList())) {
+                            block.setType(index++ % 2 == 1 ? Material.BLACK_WOOL : Material.YELLOW_WOOL);
+                        }
+                    }
+                });
+            }
+
+            //Reset materials
+            errorsRunnables.add(new BukkitRunnable() {
+                @Override
+                public void run() {
+                    for(Pair<Block, Material> data : altered) {
+                        data.getKey().setType(data.getValue());
+                    }
+                }
+            });
+
+            int delay = 0;
+            for(BukkitRunnable runnable : errorsRunnables) {
+                runnable.runTaskLater(Core.getInstance(), delay);
+                delay += 8;
+            }
+            errorsRunnables.clear();
+
+            return; //Found not allowedblock!!
+        }
+
+        //TODO Spawn tower schematic
         relativeLocation.getBlock().setType(icon);
-        //Temp icon block spawn to showcase its there
+
 
         spawnArmorStand(relativeLocation);
 
         //Add building to arena as checkable instance
         _activeArena.addBuilding(this);
+    }
+
+    /**
+     * Get first block above current block that is below an air block!
+     *
+     * @param block - Block you want to check if air is above
+     * @return - Block below an air block
+     */
+    private Block getFirstBelowAir(Block block) {
+        if(block.getLocation().clone().add(0, 1, 0).getBlock().getType().isAir())
+            return block;
+        return getFirstBelowAir(block.getLocation().clone().add(0, 1,0).getBlock());
     }
 
     /**
@@ -151,7 +218,7 @@ public abstract class Tower {
      */
     public void trigger(List<Entity> entitiesNearby) {
         if(TowerLevel < 1) return; //Its not build LOL!
-        if(Cooldown >= 1) return; //Cooldown active!!
+        if(Cooldown > 0) return; //Cooldown active!!
 
         try {
             if(TowerLevel > _triggersForLevel.length) {
@@ -189,6 +256,23 @@ public abstract class Tower {
 
         p.sendMessage("We have upgraded " + Name + " to level " + TowerLevel);
         TowerLevel += 1;
+    }
+
+    public <T> T Clone() {
+        Object instance = null;
+        try {
+            instance = this.getClass().getConstructor().newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
+        return (T) instance;
     }
 
     ///A few getters & setters

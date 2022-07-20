@@ -26,17 +26,21 @@ public class InteractBuildingEvent implements Listener {
 
     @EventHandler
     public void click(EntityDamageByEntityEvent event) {
+
+        //Pre event checks to check if its inside arena requirements.
+        if(!(event.getDamager() instanceof Player)) return;
+        if(!Core.getInstance().isPlayerInArena((Player)event.getDamager())) return;
         if(event.getEntityType() != EntityType.ARMOR_STAND) return; //Items is not an armorstand
         event.setCancelled(true);
 
+        //Loop trough all towers in arena and get corresponding stuff
         AtomicBoolean foundTower = new AtomicBoolean(false);
-        Core.getInstance().getArenas().get(0).getTowers().forEach(twr -> {
-            //System.out.println("Did we click on a tower armorstand?!");
-            if(!twr.didYouClickMe(event.getEntity())) return; //Armorstand does not belong to tower!
+        Core.getInstance().getArenaForPlayer((Player)event.getDamager()).getTowers().forEach(twr -> {
 
+            if(!twr.didYouClickMe(event.getEntity())) return; //Armorstand does not belong to tower!
             InventoryGui upgradeUi = new InventoryGui(twr.getName() + " : Lvl. " + twr.getLevel(), 3) { };
 
-            //TODO Make this configurable!
+            //TODO Move to config
             Float costs = twr.getUpgradeCosts();
             if(costs >= 0) upgradeUi.addItem(new GuiItem(Material.ANVIL, 10, 1)
                     .setName("Upgrade to Lvl. "  + twr.getLevel() + 1)
@@ -66,6 +70,7 @@ public class InteractBuildingEvent implements Listener {
 
         });
 
+        //Set cancelled false for the event if its a regular armorstand in the arena
         if(!foundTower.get()) event.setCancelled(false);
     }
 

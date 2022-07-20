@@ -1,13 +1,14 @@
 package yorickbm.towerdefence;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.API.gui.GuiEventRegistry;
 import yorickbm.towerdefence.API.gui.GuiItem;
 import yorickbm.towerdefence.API.gui.InventoryGui;
 import yorickbm.towerdefence.API.gui.events.OpenGUIEvent;
+import yorickbm.towerdefence.Mobs.ArenaMob;
 import yorickbm.towerdefence.arena.Arena;
 import yorickbm.towerdefence.commands.CreateTowerCommand;
 import yorickbm.towerdefence.commands.JoinArenaCommand;
@@ -23,13 +24,9 @@ import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -47,6 +44,7 @@ public final class Core extends JavaPlugin {
 
     private List<Arena> _arenas = new ArrayList<>();
     private List<Tower> _towers = new ArrayList<>();
+    private List<ArenaMob> _mobs = new ArrayList<>();
 
     @Override
     public void onEnable() { // Plugin startup logic
@@ -60,17 +58,27 @@ public final class Core extends JavaPlugin {
         getCommand("stopArena").setExecutor(new StopArenaCommand());
         getCommand("createTower").setExecutor(new CreateTowerCommand());
 
+        //Create reflection load folders
+
         //Load arenas
         loadArenas();
         getLogger().log(Level.INFO, String.format("Loaded (%d) arenas!!", _arenas.size()));
 
         //Load towers (reflection...)
         try {
-            loadTowers();
-        } catch (IOException | InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException | ClassNotFoundException e) {
+            _towers = loadCustomData(getDataFolder() + "/towers");
+        } catch (IOException | NoSuchMethodException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         getLogger().log(Level.INFO, String.format("Loaded (%d) towers!!", _towers.size()));
+
+        //Load mobs (reflection...)
+        try {
+            _mobs = loadCustomData(getDataFolder() + "/mobs");
+        } catch (IOException | NoSuchMethodException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        getLogger().log(Level.INFO, String.format("Loaded (%d) mobs!!", _mobs.size()));
 
         //Load GUIS
         InventoryGui builderGui = new InventoryGui("Buildings", 3) { };
@@ -84,21 +92,19 @@ public final class Core extends JavaPlugin {
             return true; //Open the inventory!
         });
         int slot = 10;
-        for(Tower twr : _towers) {
+        for(Tower twr : _towers) { //TODO Move to config
             builderGui.addItem(new GuiItem(twr.getIcon(), slot++, 1).setName(twr.getName()).setLore(twr.getDescription()).setOnClick(p -> {
-                try {
-                    twr.getClass().cast(twr.getClass().getConstructor().newInstance())
-                            .spawnTower(_arenas.get(0), new TDLocation(p.getLocation()));
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
+                if(!isPlayerInArena(p)) {
+                    p.sendMessage("You can only place a building if you are part of an arena!");
+                    return;
                 }
-                //TODO get arena player is part of
+
+                if(p.getLocation().clone().subtract(0, 1,0).getBlock().getType().isAir()) {
+                    p.sendMessage("Please stand on the ground where you would like to build your tower!");
+                    return;
+                }
+
+                twr.<Tower>Clone().spawnTower(getArenaForPlayer(p), new TDLocation(p.getLocation()));
             }));
         }
         GuiEventRegistry.Register(builderGui);
@@ -128,13 +134,24 @@ public final class Core extends JavaPlugin {
         }
     }
 
+    public boolean isPlayerInArena(Player p) {
+        return getArenaForPlayer(p) != null;
+    }
+    public Arena getArenaForPlayer(Player p) {
+        Optional<Arena> result = _arenas.stream().filter(a -> a.getPlayers().contains(p.getUniqueId())).findFirst();
+
+        if(!result.isPresent()) return null;
+        return result.get();
+    }
+
     public List<Arena> getArenas() { return  _arenas; }
     public List<Tower> getTowers() { return _towers; }
 
     JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager sjfm = jc.getStandardFileManager(null, Locale.getDefault(), null);
 
-    private void loadTowers() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private <T> List<T> loadCustomData(String baseFolder) throws IOException, ClassNotFoundException, NoSuchMethodException {
+        List<T> data = new ArrayList<>();
         File serverFiles = new File(getServer().getWorldContainer().getAbsolutePath());
         File pluginFiles = new File(serverFiles.getPath().substring(0, serverFiles.getPath().length()-1) + "/plugins/");
         StringBuilder pluginDependencys = new StringBuilder();
@@ -155,45 +172,49 @@ public final class Core extends JavaPlugin {
 
         //System.out.println("Compiler Dependencys: " + pluginDependencys.substring(0, pluginDependencys.length()-1));
 
-        File javaDirectory = new File(getDataFolder() + "/towers/");
+        File javaDirectory = new File(baseFolder + "/");
         for(File f : javaDirectory.listFiles()) {
 
             if(f.isDirectory()) continue;
             if(!f.getName().endsWith(".java")) continue;
 
             Iterable fileObjects = sjfm.getJavaFileObjects(f);
-            String[] options = new String[]{"-d", getDataFolder() + "/towers/bin", "-classpath", pluginDependencys.substring(0, pluginDependencys.length()-1) };
+            String[] options = new String[]{"-d", baseFolder + "/bin", "-classpath", pluginDependencys.substring(0, pluginDependencys.length()-1) };
 
             jc.getTask(null, null, null, Arrays.asList(options), null, fileObjects).call();
             sjfm.close();
 
         }
 
-        URL[] urls = new URL[]{ new File(getDataFolder() + "/towers/bin/").toURI().toURL() };
+        File classes = new File(baseFolder + "/bin/");
+        URL[] urls = new URL[]{ classes.toURI().toURL() };
         URLClassLoader ucl = new URLClassLoader(urls, getClassLoader());
 
-        Class clazz = ucl.loadClass("BombTower");
-        Object object = clazz.getConstructor().newInstance();
-        _towers.add((Tower) object);
+        for(File f : classes.listFiles()) {
+            if(f.isDirectory()) continue;
+            if(!f.getName().endsWith(".class")) continue;
+
+            Class clazz = ucl.loadClass(f.getName().substring(0, f.getName().lastIndexOf('.')));
+            Object object = null;
+            try {
+                object = clazz.getConstructor().newInstance();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            data.add((T) object);
+        }
+
+        return data;
     }
 
+    public Arena getArena(int id) {
+        Optional<Arena> result = _arenas.stream().filter(a -> a.getID() == id).findFirst();
+
+        if(result.isPresent()) return result.get();
+        return null;
+    }
 }
-
-
-//    // Create a File object on the root of the directory containing the class file
-//
-//
-//try {
-//        // Convert File to a URL
-//        URL url = file.toURI().toURL();          // file:/c:/myclasses/
-//        URL[] urls = new URL[]{url};
-//
-//        // Create a new class loader with the directory
-//        ClassLoader cl = new URLClassLoader(urls);
-//
-//        // Load in the class; MyClass.class should be located in
-//        // the directory file:/c:/myclasses/com/mycompany
-//        Class cls = cl.loadClass("com.mycompany.MyClass");
-//        } catch (MalformedURLException e) {
-//        } catch (ClassNotFoundException e) {
-//        }

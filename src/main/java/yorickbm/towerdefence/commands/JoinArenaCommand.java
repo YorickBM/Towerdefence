@@ -1,5 +1,6 @@
 package yorickbm.towerdefence.commands;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,27 +18,44 @@ public class JoinArenaCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 
         if(!(sender instanceof Player)) {
-            sender.sendMessage("Only a player can execute this commando!");
-            return false;
+
+            if(args.length < 2) {
+                sender.sendMessage("Please provide a player to join to the arena!");
+                return false;
+            }
+
+            if(!Bukkit.getPlayer(args[1]).isOnline()) {
+                sender.sendMessage("Player is not online, try again later!");
+                return true;
+            }
+
+        } else {
+
+            //TODO Check permission
+
+            if(Core.getInstance().isPlayerInArena((Player)sender)) {
+                Core.getInstance().getArenaForPlayer((Player)sender).removePlayer((Player)sender);
+            }
+
         }
 
-        if(args.length < 1) {
-            sender.sendMessage("Please enter the number of the arena you want to join!");
-            return false;
+        Arena arenaClass = null;
+        if(args.length >= 1) arenaClass = Core.getInstance().getArena(Integer.parseInt(args[0]));
+        else {
+            arenaClass = Core.getInstance().getArenas().get(new Random().nextInt(Core.getInstance().getArenas().size()));
         }
 
-        int arena = 0;
-        if(args[0].equals("random")) arena = new Random().nextInt(Core.getInstance().getArenas().size());
-        else arena = Integer.parseInt(args[0]);
-
-        if(arena > Core.getInstance().getArenas().size()) {
-            sender.sendMessage("The number you entered is not a valid arena!");
-            return false;
+        if(arenaClass == null) {
+            sender.sendMessage("Could not find the arena you would like to start!");
+            return true;
         }
 
-        Arena arenaClass = Core.getInstance().getArenas().get(arena-1);
-        arenaClass.teleportLobby((Player)sender);
-        arenaClass.addPlayer(((Player)sender).getUniqueId());
+        Player player = null;
+        if(args.length < 2) player = (Player)sender;
+        else player = Bukkit.getPlayer(args[1]);
+
+        arenaClass.teleportLobby(player);
+        arenaClass.addPlayer(player.getUniqueId());
 
         return true;
     }

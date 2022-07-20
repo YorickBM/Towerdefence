@@ -2,11 +2,8 @@ package yorickbm.towerdefence.towers;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
-
-import org.bukkit.entity.Player;
 import yorickbm.towerdefence.API.Annotations.TowerLevel;
-import yorickbm.towerdefence.towers.Schematic.*;
-import yorickbm.towerdefence.towers.Tower;
+import yorickbm.towerdefence.towers.Schematic.TowerSchematic;
 
 import java.util.List;
 import java.util.Random;

@@ -1,5 +1,6 @@
 package yorickbm.towerdefence.arena;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -12,7 +13,7 @@ import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.Core;
 import yorickbm.towerdefence.Mobs.ArenaMob;
-import yorickbm.towerdefence.Mobs.Zombie;
+import yorickbm.towerdefence.Mobs.Monster;
 import yorickbm.towerdefence.enums.Team;
 import yorickbm.towerdefence.towers.Tower;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
  */
 public class Arena {
 
+    //Some variables
     private Material _buildBlock = Material.CYAN_TERRACOTTA;
     private Material _directionBlock = Material.MAGENTA_GLAZED_TERRACOTTA;
     private Material _finishBlock = Material.YELLOW_GLAZED_TERRACOTTA;
@@ -45,8 +47,12 @@ public class Arena {
     private List<Chunk> _chunksA, _chunksB;
     private int waveIndex = 0;
 
+    BukkitRunnable timer;
+    List<Chunk> _passedChunks;
+
     private BlockFace _spawnDirection = BlockFace.NORTH;
 
+    //Some constructors
     public Arena fromString(String arenaString) {
         arenaString = arenaString.substring(1, arenaString.length() -1); //Remove accolades
 
@@ -70,8 +76,6 @@ public class Arena {
         return this;
     }
 
-    public Material getBuildMaterial() { return _buildBlock; }
-
     public Arena() {
         _waves = new ArrayList<>();
         _towers = new ArrayList<>();
@@ -84,11 +88,13 @@ public class Arena {
         _chunksB = new ArrayList<>();
     }
 
-    public void spawnNextWave() {
-        Wave waveToSpawn = _waves.get(waveIndex++);
-    }
-    public void addBuilding(Tower tower) { _towers.add(tower); }
-
+    /**
+     * Remove all towers, entities and other related data to arena.
+     * By doing this the map will revert back to its original state and nothing is left behind.
+     * This makes sure everything done within the arena will be temporarily!
+     *
+     * (BE AWARE MAY HAVE ISSUES WHEN SERVER RELOADS OR SUDDENLY SHUTSDOWN)
+     */
     public void clean() {
         if(timer != null) timer.cancel();
 
@@ -99,21 +105,34 @@ public class Arena {
         for(Tower tower : _towers) tower.destroy();
         _towers.clear();
 
+        //remove all players
+        for(UUID uuid : _teams.stream().map(p -> p.getKey()).collect(Collectors.toList())) Bukkit.getPlayer(uuid).teleport(Bukkit.getServer().getWorld("world").getSpawnLocation());
+        _teams.clear();
+
         //Unload all chunks
         for(Chunk chunk : _chunksA) chunk.unload(true);
         for(Chunk chunk : _chunksB) chunk.unload(true);
     }
 
-    BukkitRunnable timer;
+    /**
+     * Runs the arena update every 10 ticks!
+     */
     private void update() {
-        for (Tower tower : _towers) tower.checkMobs();
-        //System.out.println("Running update for " + _towers.size() + " towers!");
+        for (Tower tower : _towers) tower.checkMobs(); //Update all active tower instances!
     }
 
-    List<Chunk> _passedChunks;
+
+    /**
+     * Find next locator block
+     *
+     * @param location - Location to start from
+     * @param direction - Direction to look into
+     * @param distance - Blocks already traversed recursively
+     * @return - Next locator block
+     */
     private Block findNextCorner(Location location, BlockFace direction, int distance) {
-        if(distance > 25) {
-            System.out.println("COULD NOT FIND BLOCK WITHIN 25 BLOCKS!! " + direction);
+        if(distance > 75) {
+            System.out.println("COULD NOT FIND BLOCK WITHIN 75 BLOCKS!! " + direction);
             return null;
         }
 
@@ -133,6 +152,9 @@ public class Arena {
         return findNextCorner(location, direction, distance + 1);
     }
 
+    /**
+     * Spawn a zombie for both teams!
+     */
     private void spawnZombie() {
         System.out.println("Running wave task!");
 
@@ -141,11 +163,15 @@ public class Arena {
         Location spawnLocationB = new Location(Core.getInstance().getServer().getWorld(getWorldName()),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ());
 
-        _entities.add(new Zombie(_cornersA, spawnLocationA));
-        _entities.add(new Zombie(_cornersB, spawnLocationB));
+        _entities.add(new Monster(_cornersA, spawnLocationA));
+        _entities.add(new Monster(_cornersB, spawnLocationB));
 
     }
 
+    /**
+     * Prepare the arena and teleport all teams to the map
+     * Will also load all chunks traveled by the arena mobs & the path they will need to take.
+     */
     public void prepare() {
         waveIndex = 0;
 
@@ -192,6 +218,13 @@ public class Arena {
         spawnZombie();
     }
 
+    /**
+     * Get the path entities have to cross in this arena from a starting location!
+     * It has a max distance of 75 blocks between each path locator block!
+     *
+     * @param location - Location to start loading from
+     * @return - List of all locator blocks
+     */
     public List<Block> loadPath(Location location) {
         List<Block> blocks = new ArrayList<>();
         BlockFace direction = _spawnDirection;
@@ -211,6 +244,11 @@ public class Arena {
         return blocks;
     }
 
+    /**
+     * Teleport entity to lobby
+     * @param entity - The entity to be teleported
+     * @return - If teleport is successful
+     */
     public boolean teleportLobby(Entity entity) {
         return entity.teleport(
                 new Location(
@@ -219,6 +257,12 @@ public class Arena {
                 )
         );
     }
+
+    /**
+     * Teleport entity to spawn of Team A
+     * @param entity - The entity to be teleported
+     * @return - If teleport is successful
+     */
     public boolean teleportTeamA(Entity entity) {
         Location spawn = new Location(
                 Core.getInstance().getServer().getWorld(_arenaWorld),
@@ -227,6 +271,12 @@ public class Arena {
 
         return entity.teleport(spawn);
     }
+
+    /**
+     * Teleport entity to spawn of Team B
+     * @param entity - The entity to be teleported
+     * @return - If teleport is successful
+     */
     public boolean teleportTeamB(Entity entity) {
         Location spawn = new Location(
                 Core.getInstance().getServer().getWorld(_arenaWorld),
@@ -234,10 +284,6 @@ public class Arena {
         if(entity instanceof Player) ((Player)entity).setCompassTarget(spawn);
 
         return entity.teleport(spawn);
-    }
-
-    public String getWorldName() {
-        return _arenaWorld;
     }
 
     @Override
@@ -252,11 +298,31 @@ public class Arena {
                 '}';
     }
 
-    public void addPlayer(UUID uniqueId) {
-        _teams.add(new Pair<>(uniqueId, Team.NEUTRAL));
-    }
 
+    //A few getters & Setters
+    public String getWorldName() {
+        return _arenaWorld;
+    }
     public List<Tower> getTowers() {
         return _towers;
     }
+    public Material getBuildMaterial() { return _buildBlock; }
+    public void addBuilding(Tower tower) { _towers.add(tower); }
+
+    public void addPlayer(UUID uniqueId) {
+        _teams.add(new Pair<>(uniqueId, Team.NEUTRAL));
+    }
+    public List<UUID> getPlayers() {
+        return _teams.stream().map(p -> p.getKey()).collect(Collectors.toList());
+    }
+    public void removePlayer(Player p) { _teams.removeIf(d -> d.getKey().equals(p.getUniqueId())); }
+
+    public void spawnNextWave() {
+        Wave waveToSpawn = _waves.get(waveIndex++);
+    }
+
+    public int getID() {
+        return 0; //TODO gen id
+    }
+
 }
