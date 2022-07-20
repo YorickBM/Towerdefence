@@ -23,21 +23,27 @@ public abstract class InventoryGui {
     protected final GuiHolder identifier;
     protected BiConsumer<GuiItem, Player> interact;
 
-    protected List<GuiItem> items;
+    protected GuiItem[] items;
 
     public void open(final ItemStack mainHand, final Action action, final PlayerInteractEvent e) {
         if(rightClick != null) if(action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) if(rightClick.apply(mainHand, e)) renderGui(e.getPlayer());
         if(leftClick != null) if(action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) if(leftClick.apply(mainHand, e)) renderGui(e.getPlayer());
     }
     public void onInteract(ItemStack clickedItem, int slot, Player player) {
-        if(interact != null) interact.accept(items.get(slot), player);
-        else items.get(slot).interact.accept(player);
+        if(interact != null) interact.accept(items[slot], player);
+        else items[slot].interact.accept(player);
     }
 
     protected void renderGui(Player player) {
         //remove all items
+        gui.clear();
 
         //add items
+        for(int i = 0; i < items.length; i++) {
+            if(items[i] == null) continue; //No item in slot
+
+            gui.setItem(i, items[i].getItem());
+        }
 
         player.openInventory(gui);
     }
@@ -49,15 +55,20 @@ public abstract class InventoryGui {
     public InventoryGui(final String title, final int rows) {
         final int slots = 9*rows;
 
-        items = new ArrayList<>();
+        items = new GuiItem[slots];
 
         identifier = new GuiHolder(indentifierPool.nextString());
         gui = Bukkit.createInventory(identifier, slots, title);
+        setInteraction((i, p) -> { i.onClick(p);});
     }
 
     public InventoryHolder getHolder() { return identifier; }
 
-    public void addItem(GuiItem item) {items.add(item.slot, item);}
-    public void removeItem(GuiItem item) {removeItem(item.slot);}
-    public void removeItem(int slot) {items.remove(slot);}
+    public void addItem(GuiItem item) {items[item.getSlot()] = item;}
+    public void removeItem(GuiItem item) {removeItem(item.getSlot());}
+    public void removeItem(int slot) {items[slot] = null;}
+
+    public void forceOpen(Player player) {
+        renderGui(player);
+    }
 }

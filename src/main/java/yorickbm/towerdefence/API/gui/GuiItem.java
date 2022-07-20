@@ -6,13 +6,17 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class GuiItem {
 
-    final ItemStack item;
-    final int slot;
+    private final ItemStack item;
+    private final int slot;
     Consumer<Player> interact;
+
+    private String name;
+    private List<String> lore;
 
     public GuiItem(final Material material, final int slot, final int amount) {
         this.slot = slot;
@@ -21,19 +25,42 @@ public class GuiItem {
         interact = (p) -> {};
     }
 
-    public void setName(final String name) {
+    public GuiItem setName(final String name) {
+        this.name = name;
+        return this;
+    }
+    private void applyName(final String name) {
         final ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         item.setItemMeta(meta);
+
     }
 
-    public void setLore(final String... lore) {
+    public GuiItem setLore(final String... lore) {
+        this.lore = Arrays.asList(lore);
+        return this;
+    }
+    public GuiItem applyLore(final List<String> lore) {
         final ItemMeta meta = item.getItemMeta();
-        meta.setLore(Arrays.asList(lore));
+        meta.setLore(lore);
         item.setItemMeta(meta);
+
+        return this;
     }
 
     public void onClick(Player player) { interact.accept(player); }
-    public void setOnClick(Consumer<Player> onClick) { interact = onClick; }
+    public GuiItem setOnClick(Consumer<Player> onClick) { interact = onClick;
+        return this;
+    }
 
+    public ItemStack getItem() {
+        applyName(name);
+        applyLore(lore);
+
+        return item;
+    }
+
+    public int getSlot() {
+        return slot;
+    }
 }

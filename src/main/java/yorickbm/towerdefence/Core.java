@@ -3,7 +3,9 @@ package yorickbm.towerdefence;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
+import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.API.gui.GuiEventRegistry;
+import yorickbm.towerdefence.API.gui.GuiItem;
 import yorickbm.towerdefence.API.gui.InventoryGui;
 import yorickbm.towerdefence.API.gui.events.OpenGUIEvent;
 import yorickbm.towerdefence.arena.Arena;
@@ -12,6 +14,8 @@ import yorickbm.towerdefence.commands.JoinArenaCommand;
 import yorickbm.towerdefence.commands.StartArenaCommand;
 import yorickbm.towerdefence.commands.StopArenaCommand;
 import yorickbm.towerdefence.configuration.ConfigManager;
+import yorickbm.towerdefence.events.InteractBuildingEvent;
+import yorickbm.towerdefence.towers.Tower;
 
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
@@ -45,6 +49,7 @@ public final class Core extends JavaPlugin {
     public ConfigManager getConfigManager() { return _scfgm; }
 
     private List<Arena> _arenas = new ArrayList<>();
+    private List<Tower> _towers = new ArrayList<>();
 
     @Override
     public void onEnable() { // Plugin startup logic
@@ -68,12 +73,11 @@ public final class Core extends JavaPlugin {
         } catch (IOException | InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        getLogger().log(Level.INFO, String.format("Loaded (%d) towers!!", 0));
+        getLogger().log(Level.INFO, String.format("Loaded (%d) towers!!", _towers.size()));
 
         //Load GUIS
         InventoryGui builderGui = new InventoryGui("Buildings", 3) { };
         builderGui.setInteraction((item, player) -> {
-            item.setName("You seem to have clicked on me?!");
             item.onClick(player);
         });
         builderGui.setRightClick((item, event) -> {
@@ -82,12 +86,31 @@ public final class Core extends JavaPlugin {
 
             return true; //Open the inventory!
         });
+        int slot = 10;
+        for(Tower twr : _towers) {
+            builderGui.addItem(new GuiItem(twr.getIcon(), slot++, 1).setName(twr.getName()).setLore(twr.getDescription()).setOnClick(p -> {
+                try {
+                    twr.getClass().cast(twr.getClass().getConstructor().newInstance())
+                            .spawnTower(_arenas.get(0), new TDLocation(p.getLocation()));
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                }
+                //TODO get arena player is part of
+            }));
+        }
         GuiEventRegistry.Register(builderGui);
 
         getLogger().log(Level.INFO, String.format("Loaded (%d) guis!!", GuiEventRegistry.GetAll().size()));
 
         //Register events
         getServer().getPluginManager().registerEvents(new OpenGUIEvent(), this);
+        getServer().getPluginManager().registerEvents(new InteractBuildingEvent(), this);
 
         //Log that we started up!
         getLogger().log(Level.INFO, String.format("You can start building your towers :D", _arenas.size()));
@@ -109,42 +132,12 @@ public final class Core extends JavaPlugin {
     }
 
     public List<Arena> getArenas() { return  _arenas; }
+    public List<Tower> getTowers() { return _towers; }
 
     JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager sjfm = jc.getStandardFileManager(null, Locale.getDefault(), null);
 
-    private void fixTowerImports() throws IOException {
-
-        File javaDirectory = new File(getDataFolder() + "/towers/");
-
-        for(File f : javaDirectory.listFiles()) {
-            if(f.isDirectory()) continue;
-            if(!f.getName().endsWith(".java")) continue;
-
-            List<String> newLines = new ArrayList<>();
-            for(String line : Files.readAllLines(Path.of(f.getAbsolutePath()), StandardCharsets.UTF_8)) {
-                if(!line.startsWith("import ")) { newLines.add(line); continue; }
-
-                String imporz = line.split(" ")[1];
-                imporz = imporz.substring(0, imporz.length()-1);
-                if(imporz.startsWith("org.bukkit.craftbukkit.") && !imporz.startsWith("org.bukkit.")) continue; //Already reformatted!
-
-                String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-                imporz = imporz.replace("org.bukkit.", "org.bukkit.craftbukkit." + version);
-
-                System.out.println("Fixed Import: " + "import " + imporz + ";");
-                newLines.add("import " + imporz + ";");
-
-            }
-            Files.write(Path.of(f.getAbsolutePath()), newLines, StandardCharsets.UTF_8);
-
-        }
-
-    }
-
     private void loadTowers() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        fixTowerImports();
-
         File serverFiles = new File(getServer().getWorldContainer().getAbsolutePath());
         File pluginFiles = new File(serverFiles.getPath().substring(0, serverFiles.getPath().length()-1) + "/plugins/");
         StringBuilder pluginDependencys = new StringBuilder();
@@ -163,29 +156,28 @@ public final class Core extends JavaPlugin {
             pluginDependencys.append(f.getAbsolutePath() + File.pathSeparator);
         }
 
-        System.out.println("Compiler Dependencys: " + pluginDependencys.substring(0, pluginDependencys.length()-1));
+        //System.out.println("Compiler Dependencys: " + pluginDependencys.substring(0, pluginDependencys.length()-1));
 
         File javaDirectory = new File(getDataFolder() + "/towers/");
         for(File f : javaDirectory.listFiles()) {
 
+            if(f.isDirectory()) continue;
+            if(!f.getName().endsWith(".java")) continue;
+
             Iterable fileObjects = sjfm.getJavaFileObjects(f);
             String[] options = new String[]{"-d", getDataFolder() + "/towers/bin", "-classpath", pluginDependencys.substring(0, pluginDependencys.length()-1) };
 
-            System.out.println("getTask");
             jc.getTask(null, null, null, Arrays.asList(options), null, fileObjects).call();
             sjfm.close();
 
         }
 
-        URL[] urls = new URL[]{ new URL(getDataFolder() + "/towers/bin/") };
-        URLClassLoader ucl = new URLClassLoader(urls);
+        URL[] urls = new URL[]{ new File(getDataFolder() + "/towers/bin/").toURI().toURL() };
+        URLClassLoader ucl = new URLClassLoader(urls, getClassLoader());
 
-        Class clazz = ucl.loadClass("yorickbm.towerdefence.towers.GenericTower");
-        Method method = clazz.getDeclaredMethod("trigger", null);
-
+        Class clazz = ucl.loadClass("BombTower");
         Object object = clazz.getConstructor().newInstance();
-        method.invoke(object, null);
-
+        _towers.add((Tower) object);
     }
 
 }

@@ -98,6 +98,8 @@ public class Arena {
         for(ArenaMob entity : _entities) entity.destroy(); //.damage(entity.getHealth());
 
         //remove all buildings
+        for(Tower tower : _towers) tower.destroy();
+        _towers.clear();
 
         //Unload all chunks
         for(Chunk chunk : _chunksA) chunk.unload(true);
@@ -107,6 +109,7 @@ public class Arena {
     BukkitRunnable timer;
     private void update() {
         for (Tower tower : _towers) tower.checkMobs();
+        //System.out.println("Running update for " + _towers.size() + " towers!");
     }
 
     List<Chunk> _passedChunks;
@@ -154,7 +157,7 @@ public class Arena {
                 update();
             }
         };
-        timer.runTaskTimer(Core.getInstance(), 5 * 60 * 20, 20);
+        timer.runTaskTimer(Core.getInstance(), 5*20, 10);
 
         //TODO: Make it fill teams evenly
         int randoms = 0;
@@ -253,5 +256,9 @@ public class Arena {
 
     public void addPlayer(UUID uniqueId) {
         _teams.add(new Pair<>(uniqueId, Team.NEUTRAL));
+    }
+
+    public List<Tower> getTowers() {
+        return _towers;
     }
 }

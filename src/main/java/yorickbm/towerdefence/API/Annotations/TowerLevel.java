@@ -13,5 +13,6 @@ import java.lang.annotation.Target;
 public @interface TowerLevel {
 
     public int level();
+    public float costs();
 
 }

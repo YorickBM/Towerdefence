@@ -1,15 +1,16 @@
 package yorickbm.towerdefence.towers;
 
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+
+import org.bukkit.entity.Player;
 import yorickbm.towerdefence.API.Annotations.TowerLevel;
-import yorickbm.towerdefence.Core;
-import yorickbm.towerdefence.towers.Schematic.TowerSchematic;
+import yorickbm.towerdefence.towers.Schematic.*;
+import yorickbm.towerdefence.towers.Tower;
 
-import java.util.logging.Level;
+import java.util.List;
+import java.util.Random;
 
-/**
- * Last modified by: YorickBM on 27-06-2022
- */
 public class BombTower extends Tower {
 
     public BombTower() {
@@ -23,14 +24,62 @@ public class BombTower extends Tower {
         super.schematic = new TowerSchematic("");
     }
 
-    @TowerLevel(level = 1)
-    public void trigger_lvl1() {
-        Core.getInstance().getLogger().log(Level.CONFIG, String.format("Trigger for lvl 1 of tower %s", super.Name));
+    @TowerLevel(level = 1, costs = 42)
+    public void trigger_lvl1(List<Entity> entities) {
+
+        Random rand = new Random();
+        Entity victem = entities.get(0);
+
+        victem = entities.get(rand.nextInt(entities.size()));
+        victem.getWorld().createExplosion(victem.getLocation().getX(), victem.getLocation().getY(), victem.getLocation().getZ(),
+                3, false, false);
+
+        super.setCooldown(12);
+
     }
 
-    @TowerLevel(level = 2)
-    public void trigger_lvl2() {
-        Core.getInstance().getLogger().log(Level.CONFIG, String.format("Trigger for lvl 2 of tower %s", super.Name));
+    @TowerLevel(level = 2, costs = 67)
+    public void trigger_lvl2(List<Entity> entities) {
+        Random rand = new Random();
+        Entity victem = entities.get(0);
+
+        victem = entities.get(rand.nextInt(entities.size()));
+        victem.getWorld().createExplosion(victem.getLocation().getX(), victem.getLocation().getY(), victem.getLocation().getZ(),
+                5, false, false);
+
+        super.setCooldown(12);
+    }
+
+    @TowerLevel(level = 3, costs = 96)
+    public void trigger_lvl3(List<Entity> entities) {
+        Random rand = new Random();
+        Entity victem = entities.get(0);
+
+        victem = entities.get(rand.nextInt(entities.size()));
+        victem.getWorld().createExplosion(victem.getLocation().getX(), victem.getLocation().getY(), victem.getLocation().getZ(),
+                5, false, false);
+
+        victem = entities.get(rand.nextInt(entities.size()));
+        victem.getWorld().createExplosion(victem.getLocation().getX(), victem.getLocation().getY(), victem.getLocation().getZ(),
+                5, false, false);
+
+        super.setCooldown(8);
+    }
+
+    @TowerLevel(level = 4, costs= 110)
+    public void trigger_lvl4(List<Entity> entities) {
+        Random rand = new Random();
+        Entity victem = entities.get(0);
+
+        victem = entities.get(rand.nextInt(entities.size()));
+        victem.getWorld().createExplosion(victem.getLocation().getX(), victem.getLocation().getY(), victem.getLocation().getZ(),
+                5, false, false);
+
+        victem = entities.get(rand.nextInt(entities.size()));
+        victem.getWorld().createExplosion(victem.getLocation().getX(), victem.getLocation().getY(), victem.getLocation().getZ(),
+                5, false, false);
+
+        super.setCooldown(4);
     }
 
 }

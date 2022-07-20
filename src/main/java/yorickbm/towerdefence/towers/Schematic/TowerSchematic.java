@@ -16,7 +16,9 @@ public class TowerSchematic {
 
     public TowerSchematic(String data) {
         _blocks = new ArrayList<>();
-        for(String block : data.split("\n")) _blocks.add(new SchematicBlock( block));
+
+        if(data.length() >= 5)
+            for(String block : data.split("\n")) _blocks.add(new SchematicBlock( block));
     }
 
     //Source: https://gist.github.com/anonymous/c2141491bc3917f7ad088cc4a9b400b1
