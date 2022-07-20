@@ -14,6 +14,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public class CreateTowerCommand implements CommandExecutor {
 
     public static RandomString identifierGen = new RandomString();

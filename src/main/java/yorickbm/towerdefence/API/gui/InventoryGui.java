@@ -9,11 +9,12 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import yorickbm.towerdefence.API.RandomString;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public abstract class InventoryGui {
 
     protected final static RandomString indentifierPool = new RandomString();

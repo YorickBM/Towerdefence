@@ -1,11 +1,13 @@
 package yorickbm.towerdefence.towers.Schematic;
 
 import org.bukkit.Location;
-import org.bukkit.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public class TowerSchematic {
 
     final List<SchematicBlock> _blocks;

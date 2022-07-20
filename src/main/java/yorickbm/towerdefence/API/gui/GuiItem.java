@@ -9,6 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public class GuiItem {
 
     private final ItemStack item;

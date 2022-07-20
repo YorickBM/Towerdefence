@@ -9,6 +9,9 @@ import yorickbm.towerdefence.arena.Arena;
 
 import java.util.Random;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public class StartArenaCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {

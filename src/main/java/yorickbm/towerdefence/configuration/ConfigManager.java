@@ -7,8 +7,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import yorickbm.towerdefence.Core;
 
-/*
- * Created by YorickBM, Last modified on: 14-1-2019
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  */
 public class ConfigManager {
     private File Setupf;

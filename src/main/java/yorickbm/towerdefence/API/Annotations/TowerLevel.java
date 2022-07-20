@@ -6,7 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Last modified by: YorickBM on 27-06-2022
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ *
+ * Allows for reflectional creation of level activation methods & level data
+ * For example the costs of the tower to be placed/upgraded
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

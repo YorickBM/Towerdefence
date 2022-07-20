@@ -26,9 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +33,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 /**
- * Last modified by: YorickBM on 27-06-2022
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  *
  * /createtower -83 66 69 -81 70 67
  */

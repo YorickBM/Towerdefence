@@ -1,7 +1,7 @@
 package yorickbm.towerdefence.arena;
 
 /**
- * Last modified by: YorickBM on 27-06-2022
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  */
 public class Wave {
 }

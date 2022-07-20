@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /**
- * Last modified by: YorickBM on 27-06-2022
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  */
 public abstract class Tower {
 

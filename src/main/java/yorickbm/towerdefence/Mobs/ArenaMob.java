@@ -2,7 +2,6 @@ package yorickbm.towerdefence.Mobs;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -10,6 +9,9 @@ import yorickbm.towerdefence.arena.Arena;
 
 import java.util.List;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public abstract class ArenaMob {
 
     protected LivingEntity entity;

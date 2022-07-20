@@ -5,11 +5,21 @@ import org.bukkit.inventory.InventoryHolder;
 
 import java.util.Objects;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ *
+ * This class allows for basic backward checks on Gui Inventorys by getting the data from the inventory holder.
+ */
 public class GuiHolder implements InventoryHolder {
 
     private String identifier;
+    private boolean draggable;
 
     public GuiHolder(String identifier) {
+        this(identifier, false);
+    }
+    public GuiHolder(String identifier, boolean draggable) {
+        this.draggable = false;
         this.identifier = identifier;
     }
 

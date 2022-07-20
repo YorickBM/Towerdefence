@@ -1,19 +1,17 @@
 package yorickbm.towerdefence.Mobs;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Location;
-
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 import yorickbm.towerdefence.Core;
-import yorickbm.towerdefence.arena.Arena;
 
 import java.util.List;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public class Zombie extends ArenaMob {
 
     public Zombie() {

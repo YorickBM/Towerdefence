@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public class InteractBuildingEvent implements Listener {
 
     private List<InventoryHolder> _activeUpgradeMenus = new ArrayList<>();

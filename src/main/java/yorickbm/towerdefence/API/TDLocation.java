@@ -3,7 +3,7 @@ package yorickbm.towerdefence.API;
 import org.bukkit.Location;
 
 /**
- * Last modified by: YorickBM on 27-06-2022
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  */
 public class TDLocation {
 

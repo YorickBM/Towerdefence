@@ -1,6 +1,5 @@
 package yorickbm.towerdefence.arena;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,14 +16,13 @@ import yorickbm.towerdefence.Mobs.Zombie;
 import yorickbm.towerdefence.enums.Team;
 import yorickbm.towerdefence.towers.Tower;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Last modified by: YorickBM on 28-06-2022
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  */
 public class Arena {
 

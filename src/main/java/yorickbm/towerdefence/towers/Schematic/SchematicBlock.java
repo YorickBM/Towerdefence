@@ -5,6 +5,9 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import yorickbm.towerdefence.API.TDLocation;
 
+/**
+ * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
+ */
 public class SchematicBlock {
 
     final Material material;
