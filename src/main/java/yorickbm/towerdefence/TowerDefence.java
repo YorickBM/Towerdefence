@@ -29,7 +29,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.logging.Level;
 
-//TODO: Spawn multiple armorstands
 //TODO: Mobs attack castle
 //TODO: Castle damage mobs that attack (Kind of thorns or so)
 //TODO: Prevent teams building on each others map

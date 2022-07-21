@@ -82,7 +82,13 @@ public abstract class Tower {
     public void destroy() {
 
         Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), _location.getX(), _location.getY(), _location.getZ());
-        _schematics[TowerLevel-1].destroy(relativeLocation);
+        int relativeLevel = TowerLevel-1;
+        if(_schematics[relativeLevel] == null)
+            for (int i = relativeLevel-1; i >= 0; i--) {
+                if(_schematics[i] == null) continue;
+                relativeLevel = i; break;
+            }
+        _schematics[relativeLevel].destroy(relativeLocation);
 
         for(ArmorStand armorStand : _armorStands) armorStand.remove();
 
@@ -202,9 +208,11 @@ public abstract class Tower {
      * Spawn an armorstand in the world, related to this tower!
      */
     private void spawnArmorStand(Location location) {
-        ArmorStand origin = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
+        ArmorStand origin = (ArmorStand) location.getWorld().spawnEntity(location.clone().add(0.5, 0, 0.5), EntityType.ARMOR_STAND);
         origin.setInvulnerable(true);
         origin.setGravity(false);
+        origin.setCustomNameVisible(false);
+        origin.setVisible(false);
 
         _armorStands.add(origin);
     }
@@ -279,8 +287,11 @@ public abstract class Tower {
 
         try {
             if (_schematics[TowerLevel - 1] != null) _schematics[TowerLevel - 1].build(relativeLocation);
-            spawnArmorStand(relativeLocation.clone().add(0, 6, 0));
         }catch(IndexOutOfBoundsException e) {} //Nothing to do but pray
+
+        spawnArmorStand(getFirstBelowAir(relativeLocation.getBlock()).getLocation().clone().subtract(0, 0.5, 0));
+        _armorStands.get(0).setCustomName(getName() + " Lvl. " + getLevel());
+        _armorStands.get(0).setCustomNameVisible(true);
     }
 
     public <T> T Clone() {
