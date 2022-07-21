@@ -40,6 +40,8 @@ import java.util.logging.Level;
 //TODO: Allow tower blacklists in code
 //TODO: Arena as JSON
 //TODO: Waves in arena JSON
+//TODO: Allow multiple placeable materials!
+//TODO: Fix so you can overlap error areas without breaking the map
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)

@@ -98,6 +98,7 @@ public abstract class Tower {
         _location = location;
         _activeArena = arena;
         TowerLevel = 0;
+        if(_activeArena  == null || _location == null) return; //Prevent null execution
 
         Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), location.getX(), location.getY(), location.getZ());
 
@@ -112,9 +113,16 @@ public abstract class Tower {
             }
         }
 
-        if(_blocksBelow.stream().map((d) -> d.getKey()).filter(block -> block.getType() != allowedMaterial).findAny().isPresent()) {
+        if(_blocksBelow.stream()
+                .map((d) -> d.getKey())
+                .filter(block -> block.getType() != allowedMaterial || //Make sure its part of allowed Material
+                        !block.getLocation().clone().add(0, 1,0).getBlock().getType().isAir()) //Check if block above is not air
+                .findAny().isPresent()) {
 
-            List<Pair<Block,Material>> altered = _blocksBelow.stream().map(d -> { d.setKey(getFirstBelowAir(d.getKey())); d.setValue(d.getKey().getType()); return d;}).collect(Collectors.toList());
+            List<Pair<Block,Material>> altered = _blocksBelow.stream()
+                    .filter(d -> d.getKey().getType() != allowedMaterial|| //Make sure its part of allowed Material
+                            !d.getKey().getLocation().clone().add(0, 1,0).getBlock().getType().isAir()) //Check if block above is not air
+                    .map(d -> { d.setKey(getFirstBelowAir(d.getKey())); d.setValue(d.getKey().getType()); return d;}).collect(Collectors.toList());
 
             List<BukkitRunnable> errorsRunnables = new ArrayList<>();
             for(int i = 0; i < 4; i++) { //Run a checkers pattern!

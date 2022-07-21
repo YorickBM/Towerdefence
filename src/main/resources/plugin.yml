@@ -1,6 +1,6 @@
 name: Towerdefence
 version: ${project.version}
-main: yorickbm.towerdefence.Core
+main: yorickbm.towerdefence.TowerDefence
 api-version: 1.19
 prefix: Towerdefence
 authors: [ yorickBM ]
