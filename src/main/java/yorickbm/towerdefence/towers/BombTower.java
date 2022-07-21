@@ -17,8 +17,6 @@ public class BombTower extends Tower {
         super.Name = "Bomb Tower";
         super.Description = "Bomb all near by mobs! Dealing damage";
         super.Range = 5;
-
-        super.schematic = new TowerSchematic("");
     }
 
     @TowerLevel(level = 1, costs = 42)

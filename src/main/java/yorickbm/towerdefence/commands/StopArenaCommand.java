@@ -4,10 +4,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
-
-import java.util.Random;
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
@@ -20,11 +18,11 @@ public class StopArenaCommand implements CommandExecutor {
         if (sender instanceof Player) {
             //TODO check permission
 
-            if (!Core.getInstance().isPlayerInArena((Player) sender) && args.length < 1) {
+            if (!TowerDefence.getInstance().isPlayerInArena((Player) sender) && args.length < 1) {
                 sender.sendMessage("Please enter the number of the arena you want to start!");
                 return false;
             } else if (args.length < 1) {
-                arena = Core.getInstance().getArenaForPlayer((Player) sender).getID();
+                arena = TowerDefence.getInstance().getArenaForPlayer((Player) sender).getID();
             } else {
                 arena = Integer.parseInt(args[0]);
             }
@@ -36,7 +34,7 @@ public class StopArenaCommand implements CommandExecutor {
             arena = Integer.parseInt(args[0]);
         }
 
-        Arena arenaClass = Core.getInstance().getArena(arena);
+        Arena arenaClass = TowerDefence.getInstance().getArena(arena);
 
         if(arenaClass == null) {
             sender.sendMessage("Could not find the arena you would like to start!");

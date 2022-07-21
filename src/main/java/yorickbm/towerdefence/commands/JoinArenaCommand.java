@@ -5,7 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
 
 import java.util.Random;
@@ -28,21 +28,20 @@ public class JoinArenaCommand implements CommandExecutor {
                 sender.sendMessage("Player is not online, try again later!");
                 return true;
             }
-
         } else {
 
             //TODO Check permission
 
-            if(Core.getInstance().isPlayerInArena((Player)sender)) {
-                Core.getInstance().getArenaForPlayer((Player)sender).removePlayer((Player)sender);
+            if(TowerDefence.getInstance().isPlayerInArena((Player)sender)) {
+                TowerDefence.getInstance().getArenaForPlayer((Player)sender).removePlayer((Player)sender);
             }
 
         }
 
         Arena arenaClass = null;
-        if(args.length >= 1) arenaClass = Core.getInstance().getArena(Integer.parseInt(args[0]));
+        if(args.length >= 1) arenaClass = TowerDefence.getInstance().getArena(Integer.parseInt(args[0]));
         else {
-            arenaClass = Core.getInstance().getArenas().get(new Random().nextInt(Core.getInstance().getArenas().size()));
+            arenaClass = TowerDefence.getInstance().getArenas().get(new Random().nextInt(TowerDefence.getInstance().getArenas().size()));
         }
 
         if(arenaClass == null) {
@@ -54,7 +53,7 @@ public class JoinArenaCommand implements CommandExecutor {
         if(args.length < 2) player = (Player)sender;
         else player = Bukkit.getPlayer(args[1]);
 
-        arenaClass.teleportLobby(player);
+        if(arenaClass.teleportLobby(player) && args.length >= 2) sender.sendMessage("Successfully added " + args[1] + " to the arena!");
         arenaClass.addPlayer(player.getUniqueId());
 
         return true;

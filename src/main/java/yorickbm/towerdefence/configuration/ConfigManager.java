@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
@@ -16,7 +16,7 @@ public class ConfigManager {
 
     public ConfigManager Initialize(String file) {
         try {
-            File dataFolder = Core.getInstance().getDataFolder();
+            File dataFolder = TowerDefence.getInstance().getDataFolder();
             if (!dataFolder.exists()) dataFolder.mkdir();
 
             this.Setupf = new File(dataFolder, file);
@@ -29,7 +29,7 @@ public class ConfigManager {
     }
 
     public ConfigManager LoadDefaults() {
-        Core.getInstance().saveResource(Setupf.getName(), false);
+        TowerDefence.getInstance().saveResource(Setupf.getName(), false);
         return this;
     }
 

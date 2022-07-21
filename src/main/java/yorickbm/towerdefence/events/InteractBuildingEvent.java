@@ -5,13 +5,14 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.InventoryHolder;
 import yorickbm.towerdefence.API.gui.GuiEventRegistry;
 import yorickbm.towerdefence.API.gui.GuiItem;
 import yorickbm.towerdefence.API.gui.InventoryGui;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,17 +26,24 @@ public class InteractBuildingEvent implements Listener {
     private List<InventoryHolder> _activeUpgradeMenus = new ArrayList<>();
 
     @EventHandler
+    public void onDestroy(BlockBreakEvent event) {
+        if(!TowerDefence.getInstance().isPlayerInArena(event.getPlayer())) return;
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler
     public void click(EntityDamageByEntityEvent event) {
 
         //Pre event checks to check if its inside arena requirements.
         if(!(event.getDamager() instanceof Player)) return;
-        if(!Core.getInstance().isPlayerInArena((Player)event.getDamager())) return;
+        if(!TowerDefence.getInstance().isPlayerInArena((Player)event.getDamager())) return;
         if(event.getEntityType() != EntityType.ARMOR_STAND) return; //Items is not an armorstand
         event.setCancelled(true);
 
         //Loop trough all towers in arena and get corresponding stuff
         AtomicBoolean foundTower = new AtomicBoolean(false);
-        Core.getInstance().getArenaForPlayer((Player)event.getDamager()).getTowers().forEach(twr -> {
+        TowerDefence.getInstance().getArenaForPlayer((Player)event.getDamager()).getTowers().forEach(twr -> {
 
             if(!twr.didYouClickMe(event.getEntity())) return; //Armorstand does not belong to tower!
             InventoryGui upgradeUi = new InventoryGui(twr.getName() + " : Lvl. " + twr.getLevel(), 3) { };

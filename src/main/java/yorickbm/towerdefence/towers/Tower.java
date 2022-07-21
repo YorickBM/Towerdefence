@@ -12,7 +12,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import yorickbm.towerdefence.API.Annotations.TowerLevel;
 import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
 import yorickbm.towerdefence.towers.Schematic.TowerSchematic;
 
@@ -40,8 +40,8 @@ public abstract class Tower {
     private TDLocation _location;
     private Arena _activeArena;
     private Method[] _triggersForLevel;
+    private TowerSchematic[] _schematics;
 
-    protected TowerSchematic schematic;
     private List<ArmorStand> _armorStands;
     private List<Pair<Method, TowerLevel>> _collectedData;
 
@@ -60,6 +60,7 @@ public abstract class Tower {
         }
 
         _triggersForLevel = new Method[maxLevel];
+        _schematics = new TowerSchematic[maxLevel];
         for(Pair<Method, TowerLevel> data : _collectedData)
             _triggersForLevel[data.getValue().level()-1] = data.getKey();
     }
@@ -81,7 +82,7 @@ public abstract class Tower {
     public void destroy() {
 
         Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), _location.getX(), _location.getY(), _location.getZ());
-        relativeLocation.getBlock().setType(Material.AIR);
+        _schematics[TowerLevel-1].destroy(relativeLocation);
 
         for(ArmorStand armorStand : _armorStands) armorStand.remove();
 
@@ -93,10 +94,10 @@ public abstract class Tower {
      * @param arena -> The arena the tower is spawned into
      * @param location -> The center of where you want to spawn the tower
      */
-    public void spawnTower(Arena arena, TDLocation location) {
+    public void spawnTower(Arena arena, TDLocation location, Player player) {
         _location = location;
         _activeArena = arena;
-        TowerLevel = 1;
+        TowerLevel = 0;
 
         Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), location.getX(), location.getY(), location.getZ());
 
@@ -149,7 +150,7 @@ public abstract class Tower {
 
             int delay = 0;
             for(BukkitRunnable runnable : errorsRunnables) {
-                runnable.runTaskLater(Core.getInstance(), delay);
+                runnable.runTaskLater(TowerDefence.getInstance(), delay);
                 delay += 8;
             }
             errorsRunnables.clear();
@@ -157,14 +158,24 @@ public abstract class Tower {
             return; //Found not allowedblock!!
         }
 
-        //TODO Spawn tower schematic
-        relativeLocation.getBlock().setType(icon);
-
-
-        spawnArmorStand(relativeLocation);
-
         //Add building to arena as checkable instance
         _activeArena.addBuilding(this);
+
+        Upgrade(player);
+        player.teleport(relativeLocation.clone().add(0, 6, 0));
+    }
+
+    /**
+     * Load a tower schematic into the tower for a specific level!
+     *
+     * @param level - Level to assign schematic too
+     * @param schematic - Schematic to assign
+     * @return - Returns if schematic has been added or not
+     */
+    public boolean loadSchematic(int level, TowerSchematic schematic) {
+        if(level >= _schematics.length) return false; //Level is above max level detected in reflection
+        _schematics[level-1] = schematic;
+        return true; //Schematic is set to level!
     }
 
     /**
@@ -222,7 +233,7 @@ public abstract class Tower {
 
         try {
             if(TowerLevel > _triggersForLevel.length) {
-                Core.getInstance().getLogger().log(Level.SEVERE, String.format("Tower %s has reached a level higher then possible %d of %d", Name, TowerLevel, _triggersForLevel.length));
+                TowerDefence.getInstance().getLogger().log(Level.SEVERE, String.format("Tower %s has reached a level higher then possible %d of %d", Name, TowerLevel, _triggersForLevel.length));
                 return; //Level not in range!!!
             }
 
@@ -250,12 +261,18 @@ public abstract class Tower {
      * @param p - Player that requests the building to be upgraded!
      */
     public void Upgrade(Player p) {
-        float costs = getUpgradeCosts();
+        final float costs = getUpgradeCosts();
+        final Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), _location.getX(), _location.getY(), _location.getZ());
 
-        //TODO Get Schematic!
-
-        p.sendMessage("We have upgraded " + Name + " to level " + TowerLevel);
+        //TODO Move to config
+        if(TowerLevel > 0) p.sendMessage("We have upgraded " + Name + " to level " + TowerLevel);
+        else p.sendMessage("We have build your tower!");
         TowerLevel += 1;
+
+        try {
+            if (_schematics[TowerLevel - 1] != null) _schematics[TowerLevel - 1].build(relativeLocation);
+            spawnArmorStand(relativeLocation.clone().add(0, 6, 0));
+        }catch(IndexOutOfBoundsException e) {} //Nothing to do but pray
     }
 
     public <T> T Clone() {

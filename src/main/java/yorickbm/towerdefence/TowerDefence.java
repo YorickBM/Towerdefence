@@ -29,15 +29,27 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.logging.Level;
 
+//TODO: Right click entity
+//TODO: Spawn multiple armorstands
+//TODO: Mobs attack castle
+//TODO: Castle damage mobs that attack (Kind of thorns or so)
+//TODO: Prevent teams building on each others map
+//TODO: Tower owner???? Is kinda annoying tbh
+//TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
+//TODO: Make END points so other plugins can build on top of this one
+//TODO: Allow tower blacklists in code
+//TODO: Arena as JSON
+//TODO: Waves in arena JSON
+
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  *
  * /createtower -83 66 69 -81 70 67
  */
-public final class Core extends JavaPlugin {
+public final class TowerDefence extends JavaPlugin {
 
-    private static Core instance = null;
-    public static Core getInstance() { return instance; }
+    private static TowerDefence instance = null;
+    public static TowerDefence getInstance() { return instance; }
 
     private ConfigManager _scfgm = null;
     public ConfigManager getConfigManager() { return _scfgm; }
@@ -48,7 +60,7 @@ public final class Core extends JavaPlugin {
 
     @Override
     public void onEnable() { // Plugin startup logic
-        //Initiat basic things
+        //Initiate basic things
         instance = this;
         _scfgm = new ConfigManager().Initialize("arenas.yml");
 
@@ -96,7 +108,7 @@ public final class Core extends JavaPlugin {
             builderGui.addItem(new GuiItem(twr.getIcon(), slot++, 1).setName(twr.getName()).setLore(twr.getDescription()).setOnClick(p -> {
                 if(!isPlayerInArena(p)) {
                     p.sendMessage("You can only place a building if you are part of an arena!");
-                    return;
+                    //return; TODO Temp override
                 }
 
                 if(p.getLocation().clone().subtract(0, 1,0).getBlock().getType().isAir()) {
@@ -104,7 +116,7 @@ public final class Core extends JavaPlugin {
                     return;
                 }
 
-                twr.<Tower>Clone().spawnTower(getArenaForPlayer(p), new TDLocation(p.getLocation()));
+                twr.<Tower>Clone().spawnTower(getArenaForPlayer(p), new TDLocation(p.getLocation()), p);
             }));
         }
         GuiEventRegistry.Register(builderGui);

@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.Mobs.ArenaMob;
 import yorickbm.towerdefence.Mobs.Monster;
 import yorickbm.towerdefence.enums.Team;
@@ -158,9 +158,9 @@ public class Arena {
     private void spawnZombie() {
         System.out.println("Running wave task!");
 
-        Location spawnLocationA = new Location(Core.getInstance().getServer().getWorld(getWorldName()),
+        Location spawnLocationA = new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
                 _spawnTeamA.getX(), _spawnTeamA.getY(), _spawnTeamA.getZ());
-        Location spawnLocationB = new Location(Core.getInstance().getServer().getWorld(getWorldName()),
+        Location spawnLocationB = new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ());
 
         _entities.add(new Monster(_cornersA, spawnLocationA));
@@ -181,12 +181,12 @@ public class Arena {
                 update();
             }
         };
-        timer.runTaskTimer(Core.getInstance(), 5*20, 10);
+        timer.runTaskTimer(TowerDefence.getInstance(), 5*20, 10);
 
         //TODO: Make it fill teams evenly
         int randoms = 0;
         for(Pair<UUID, Team> data : _teams) {
-            Player player = Core.getInstance().getServer().getPlayer(data.getKey());
+            Player player = TowerDefence.getInstance().getServer().getPlayer(data.getKey());
 
             player.sendMessage("Game will start in 5 seconds!");
 
@@ -203,12 +203,12 @@ public class Arena {
         }
 
         _passedChunks = new ArrayList<>();
-        _cornersA = loadPath(new Location(Core.getInstance().getServer().getWorld(getWorldName()),
+        _cornersA = loadPath(new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
                 _spawnTeamA.getX(), _spawnTeamA.getY(), _spawnTeamA.getZ()));
         _chunksA = _passedChunks.stream().collect(Collectors.toList());
 
         _passedChunks = new ArrayList<>();
-        _cornersB = loadPath(new Location(Core.getInstance().getServer().getWorld(getWorldName()),
+        _cornersB = loadPath(new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ()));
         _chunksB = _passedChunks.stream().collect(Collectors.toList());
 
@@ -252,7 +252,7 @@ public class Arena {
     public boolean teleportLobby(Entity entity) {
         return entity.teleport(
                 new Location(
-                        Core.getInstance().getServer().getWorld(_lobbyWorld),
+                        TowerDefence.getInstance().getServer().getWorld(_lobbyWorld),
                         _lobbyLocation.getX(), _lobbyLocation.getY(), _lobbyLocation.getZ()
                 )
         );
@@ -265,7 +265,7 @@ public class Arena {
      */
     public boolean teleportTeamA(Entity entity) {
         Location spawn = new Location(
-                Core.getInstance().getServer().getWorld(_arenaWorld),
+                TowerDefence.getInstance().getServer().getWorld(_arenaWorld),
                 _spawnTeamA.getX(), _spawnTeamA.getY(), _spawnTeamA.getZ());
         if(entity instanceof Player) ((Player)entity).setCompassTarget(spawn);
 
@@ -279,7 +279,7 @@ public class Arena {
      */
     public boolean teleportTeamB(Entity entity) {
         Location spawn = new Location(
-                Core.getInstance().getServer().getWorld(_arenaWorld),
+                TowerDefence.getInstance().getServer().getWorld(_arenaWorld),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ());
         if(entity instanceof Player) ((Player)entity).setCompassTarget(spawn);
 

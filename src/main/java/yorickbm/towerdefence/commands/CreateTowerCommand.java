@@ -6,7 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import yorickbm.towerdefence.API.RandomString;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.towers.Schematic.TowerSchematic;
 
 import java.io.BufferedWriter;
@@ -37,43 +37,12 @@ public class CreateTowerCommand implements CommandExecutor {
 
         TowerSchematic schematic = new TowerSchematic(A,B);
 
-        String clazz = "import org.bukkit.Material;\n" +
-                "import yorickbm.towerdefence.API.Annotations.TowerLevel;\n" +
-                "import yorickbm.towerdefence.Core;\n" +
-                "\n" +
-                "import java.util.logging.Level;\n" +
-                "\n" +
-                "/**\n" +
-                " * Last modified by: YorickBM on 27-06-2022\n" +
-                " */\n" +
-                "public class GenericTower extends Tower {\n" +
-                "\n" +
-                "    public GenericTower() {\n" +
-                "        super();\n" +
-                "\n" +
-                "        super.icon = Material.CHEST;\n" +
-                "        super.Name = \"Generic Tower\";\n" +
-                "        super.Description = \"This tower just looks pretty :D\";\n" +
-                "        super.Range = 1;\n" +
-                "\n" +
-                "        super.schematic = new TowerSchematic(\"" + schematic.toString().replace("\n", "\\n") + "\")\n" +
-                "    }\n" +
-                "\n" +
-                "    @TowerLevel(level = 1)\n" +
-                "    public void trigger_lvl1() {\n" +
-                "        Core.getInstance().getLogger().log(Level.CONFIG, String.format(\"Trigger for lvl 1 of tower %s\", super.Name));\n" +
-                "    }\n" +
-                "\n" +
-                "    @TowerLevel(level = 2)\n" +
-                "    public void trigger_lvl2() {\n" +
-                "        Core.getInstance().getLogger().log(Level.CONFIG, String.format(\"Trigger for lvl 2 of tower %s\", super.Name));\n" +
-                "    }\n" +
-                "\n" +
-                "}\n";
+        String clazz = "super.loadSchematic(1, new TowerSchematic(\"" + schematic.toString().replace("\n", "\\n") + "\"));";
+        clazz.replace("}\n\"));", "}\"));");
 
         File file = null;
         try {
-            file = new File(Core.getInstance().getDataFolder() + "/towers/");
+            file = new File(TowerDefence.getInstance().getDataFolder() + "/towers/");
             file.mkdirs();
             file = new File(file.getPath() + "/" + identifierGen.nextString() + ".java");
             if(!file.createNewFile()) {

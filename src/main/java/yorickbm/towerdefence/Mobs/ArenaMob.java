@@ -1,15 +1,13 @@
 package yorickbm.towerdefence.Mobs;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import yorickbm.towerdefence.Core;
+import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
 
 import java.util.List;
@@ -70,7 +68,7 @@ public abstract class ArenaMob {
     public Entity spawn(Location location) {
 
         entity = location.getWorld().spawnEntity(location, entityType);
-        tickUpdater.runTaskTimer(Core.getInstance(), 20, 1);
+        tickUpdater.runTaskTimer(TowerDefence.getInstance(), 20, 1);
 
         return entity;
     }

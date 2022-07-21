@@ -7,8 +7,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.ItemStack;
-import yorickbm.towerdefence.Core;
-import yorickbm.towerdefence.Mobs.ArenaMob;
 
 import java.util.List;
 
