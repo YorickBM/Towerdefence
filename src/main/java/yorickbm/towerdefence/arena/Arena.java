@@ -1,5 +1,7 @@
 package yorickbm.towerdefence.arena;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -9,6 +11,9 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import yorickbm.towerdefence.API.JsonConfig;
 import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.TowerDefence;
@@ -19,6 +24,7 @@ import yorickbm.towerdefence.towers.Tower;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,7 +34,7 @@ import java.util.stream.Collectors;
 public class Arena {
 
     //Some variables
-    private Material _buildBlock = Material.CYAN_TERRACOTTA;
+    private List<Pair<Team, Material>> _buildBlock = new ArrayList<>();
     private Material _directionBlock = Material.MAGENTA_GLAZED_TERRACOTTA;
     private Material _finishBlock = Material.YELLOW_GLAZED_TERRACOTTA;
 
@@ -47,33 +53,34 @@ public class Arena {
     private List<Chunk> _chunksA, _chunksB;
     private int waveIndex = 0;
 
-    BukkitRunnable timer;
-    List<Chunk> _passedChunks;
+    private BukkitRunnable timer;
+    private List<Chunk> _passedChunks;
 
     private BlockFace _spawnDirection = BlockFace.NORTH;
 
     //Some constructors
-    public Arena fromString(String arenaString) {
-        arenaString = arenaString.substring(1, arenaString.length() -1); //Remove accolades
+    public Arena(JsonConfig jsonConfig) {
+        this();
 
-        for(String row : arenaString.split(",")) {
-            String key = row.split("=")[0];
-            String value = row.split("=")[1].substring(1, row.split("=")[1].length()-1); //Remove apostrophes
+        ((JSONArray)jsonConfig.getObject("buildBlock").get("teamA")).forEach(je -> {
+            String data = je.toString();
+            _buildBlock.add(new Pair<>(Team.RED, Material.valueOf(data)));
+        });
+        ((JSONArray)jsonConfig.getObject("buildBlock").get("teamB")).forEach(je -> {
+            String data = je.toString();
+            _buildBlock.add(new Pair<>(Team.BLUE, Material.valueOf(data)));
+        });
 
-            switch(key) {
-                case "buildBlock" -> _buildBlock  = Material.valueOf(value);
-                case "arenaWorld" -> _arenaWorld = value;
-                case "lobbyWorld" -> _lobbyWorld = value;
-                case "spawnTeamA" -> _spawnTeamA = new TDLocation().fromString(value);
-                case "spawnTeamB" -> _spawnTeamB = new TDLocation().fromString(value);
-                case "lobbyLocation" -> _lobbyLocation = new TDLocation().fromString(value);
-                case "spawnDirection" -> _spawnDirection = BlockFace.valueOf(value);
-                case "directionBlock" -> _directionBlock = Material.valueOf(value);
-                case "finishBlock" -> _finishBlock = Material.valueOf(value);
-            }
-        }
+        _arenaWorld = jsonConfig.getString("arenaWorld");
+        _lobbyWorld = jsonConfig.getString("lobbyWorld");
 
-        return this;
+        _spawnTeamA = new TDLocation().fromString(jsonConfig.getString("spawnTeamA"));
+        _spawnTeamB = new TDLocation().fromString(jsonConfig.getString("spawnTeamB"));
+        _lobbyLocation = new TDLocation().fromString(jsonConfig.getString("lobbyLocation"));
+
+        _spawnDirection = BlockFace.valueOf(jsonConfig.getString("spawnDirection"));
+        _directionBlock = Material.valueOf(jsonConfig.getString("directionBlock"));
+        _finishBlock = Material.valueOf(jsonConfig.getString("finishBlock"));
     }
 
     public Arena() {
@@ -299,6 +306,39 @@ public class Arena {
     }
 
 
+    /**
+     * Convert class to jsonConfig
+     * @return JSONObject to save to JsonConfig!
+     */
+    public JSONObject getJsonObject() {
+        JSONObject data = new JSONObject();
+
+        data.put("arenaWorld", _arenaWorld);
+        data.put("lobbyWorld", _lobbyWorld);
+
+        data.put("spawnTeamA", _spawnTeamA.toString());
+        data.put("spawnTeamB", _spawnTeamB.toString());
+        data.put("lobbyLocation", _lobbyLocation.toString());
+
+        data.put("spawnDirection", _spawnDirection.toString());
+        data.put("directionBlock", _directionBlock.toString());
+        data.put("finishBlock", _finishBlock.toString());
+
+        JSONArray teamA = new JSONArray();
+        teamA.addAll(_buildBlock.stream().filter(p -> p.getKey().equals(Team.RED)).map(p -> p.getValue()).collect(Collectors.toList()));
+
+        JSONArray teamB = new JSONArray();
+        teamB.addAll(_buildBlock.stream().filter(p -> p.getKey().equals(Team.BLUE)).map(p -> p.getValue()).collect(Collectors.toList()));
+
+        JSONObject buildBlock = new JSONObject();
+        buildBlock.put("teamA", teamA);
+        buildBlock.put("teamB", teamB);
+
+        data.put("buildBlock", buildBlock);
+
+        return data;
+    }
+
     //A few getters & Setters
     public String getWorldName() {
         return _arenaWorld;
@@ -306,7 +346,15 @@ public class Arena {
     public List<Tower> getTowers() {
         return _towers;
     }
-    public Material getBuildMaterial() { return _buildBlock; }
+    public boolean isAllowedMaterial(Material material, Player player) {
+        if(getTeamForPlayer(player) == null) return false; //Player not in an arena
+        return _buildBlock.stream().filter(p -> p.getKey().equals(getTeamForPlayer(player))).map(p -> p.getValue()).filter(m -> m.equals(material)).findAny().isPresent();
+    }
+    public Team getTeamForPlayer(Player player) {
+        Optional<Pair<UUID, Team>> data = _teams.stream().filter(p -> p.getKey().equals(player.getUniqueId())).findFirst();
+        if(!data.isPresent()) return null; //No team found so return null
+        return data.get().getValue();
+    }
     public void addBuilding(Tower tower) { _towers.add(tower); }
 
     public void addPlayer(UUID uniqueId) {
@@ -321,8 +369,10 @@ public class Arena {
         Wave waveToSpawn = _waves.get(waveIndex++);
     }
 
+    int _id = 0;
+    public void setID(int id) { _id = id;}
     public int getID() {
-        return 0; //TODO gen id
+        return _id;
     }
 
 }

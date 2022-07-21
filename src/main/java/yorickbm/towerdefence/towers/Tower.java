@@ -44,11 +44,13 @@ public abstract class Tower {
 
     private List<ArmorStand> _armorStands;
     private List<Pair<Method, TowerLevel>> _collectedData;
+    private List<EntityType> _entityBlacklist;
 
     public Tower() {
         int maxLevel = 0;
         _armorStands = new ArrayList<>();
         _collectedData = new ArrayList<>();
+        _entityBlacklist = new ArrayList<>();
 
         for (final Method method : this.getClass().getDeclaredMethods()) {
             if(!method.isAnnotationPresent(TowerLevel.class)) continue;
@@ -108,9 +110,6 @@ public abstract class Tower {
 
         Location relativeLocation = new Location(Bukkit.getWorld(getArena().getWorldName()), location.getX(), location.getY(), location.getZ());
 
-        //Check if building is spawnable
-        Material allowedMaterial = getArena().getBuildMaterial();
-
         List<Pair<Block, Material>> _blocksBelow = new ArrayList<>();
         for(int x = -1; x <= 1; x++) {
             for(int z = -1; z <= 1; z++) {
@@ -121,12 +120,12 @@ public abstract class Tower {
 
         if(_blocksBelow.stream()
                 .map((d) -> d.getKey())
-                .filter(block -> block.getType() != allowedMaterial || //Make sure its part of allowed Material
+                .filter(block ->  !getArena().isAllowedMaterial(block.getType(), player) || //Make sure its part of allowed Material
                         !block.getLocation().clone().add(0, 1,0).getBlock().getType().isAir()) //Check if block above is not air
                 .findAny().isPresent()) {
 
             List<Pair<Block,Material>> altered = _blocksBelow.stream()
-                    .filter(d -> d.getKey().getType() != allowedMaterial|| //Make sure its part of allowed Material
+                    .filter(d -> !getArena().isAllowedMaterial(d.getKey().getType(), player) || //Make sure its part of allowed Material
                             !d.getKey().getLocation().clone().add(0, 1,0).getBlock().getType().isAir()) //Check if block above is not air
                     .map(d -> { d.setKey(getFirstBelowAir(d.getKey())); d.setValue(d.getKey().getType()); return d;}).collect(Collectors.toList());
 
@@ -233,6 +232,7 @@ public abstract class Tower {
                 && entity.getType() != EntityType.ARMOR_STAND
                 && entity.getType() != EntityType.DROPPED_ITEM
                 && entity.getType() != EntityType.PLAYER
+                && !_entityBlacklist.contains(entity.getType()) //Blacklist for player customization
         ).collect(Collectors.toList()); //Get all entities NOT blacklisted
 
         if(targetsNearby.size() >= 1)
@@ -309,6 +309,16 @@ public abstract class Tower {
         }
 
         return (T) instance;
+    }
+
+    /**
+     * Blacklist an entity from beeing a trigger for this tower.
+     * For example a Bomb Tower does not attack blazes....
+     *
+     * @param type - EntityType to blacklist
+     */
+    public void blackListEntity(EntityType type) {
+        _entityBlacklist.add(type);
     }
 
     ///A few getters & setters

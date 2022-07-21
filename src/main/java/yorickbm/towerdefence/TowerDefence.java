@@ -3,6 +3,7 @@ package yorickbm.towerdefence;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import yorickbm.towerdefence.API.JsonConfig;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.API.gui.GuiEventRegistry;
 import yorickbm.towerdefence.API.gui.GuiItem;
@@ -31,20 +32,20 @@ import java.util.logging.Level;
 
 //TODO: Mobs attack castle
 //TODO: Castle damage mobs that attack (Kind of thorns or so)
-//TODO: Prevent teams building on each others map
 //TODO: Tower owner???? Is kinda annoying tbh
 //TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
 //TODO: Make END points so other plugins can build on top of this one
-//TODO: Allow tower blacklists in code
 //TODO: Arena as JSON
+//TODO: Prevent teams building on each others map
+//TODO: Prevent teams from upgrading or destroying buildings from other team
 //TODO: Waves in arena JSON
 //TODO: Allow multiple placeable materials!
 //TODO: Fix so you can overlap error areas without breaking the map
+//TODO: Place buttons, signs, carpet, item_frame last/Remove first
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  *
- * /createtower -83 66 69 -81 70 67
  */
 public final class TowerDefence extends JavaPlugin {
 
@@ -140,9 +141,17 @@ public final class TowerDefence extends JavaPlugin {
     }
 
     public void loadArenas() {
-        List<String> arenasFromConfig = _scfgm.GetData().getStringList("arenas");
-        for(String arenaString : arenasFromConfig) {
-            _arenas.add(new Arena().fromString(arenaString));
+        File dir = new File(getDataFolder() + "/arenas/");
+        int id = 0;
+        for(File f : dir.listFiles()) {
+            if(f.isDirectory()) continue;
+            if(!f.getName().endsWith(".json")) continue;
+
+            Arena ar = new Arena(new JsonConfig(f));
+            ar.setID(id++);
+
+            _arenas.add(ar);
+
         }
     }
 

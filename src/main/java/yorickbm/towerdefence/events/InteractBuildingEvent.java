@@ -91,7 +91,6 @@ public class InteractBuildingEvent implements Listener {
             if(costs >= 0) upgradeUi.addItem(new GuiItem(Material.ANVIL, 10, 1)
                     .setName("Upgrade to Lvl. "  + twr.getLevel() + 1)
                     .setLore("Upgrade costs: " + costs).setOnClick(p -> {
-                        p.sendMessage("Upgrading tower to " + twr.getLevel() + 1);
                         p.closeInventory();
                         twr.Upgrade(p);
                     }));
