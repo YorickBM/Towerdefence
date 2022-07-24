@@ -102,7 +102,7 @@ public class InteractBuildingEvent implements Listener {
                     .setLore(twr.getDescription()));
 
             upgradeUi.addItem(new GuiItem(Material.BARRIER, 16, 1)
-                    .setName("Remove tower!").setOnClick(p -> {
+                    .setName("Destroy tower").setOnClick(p -> {
                         p.closeInventory();
                         twr.destroy();
                     }));

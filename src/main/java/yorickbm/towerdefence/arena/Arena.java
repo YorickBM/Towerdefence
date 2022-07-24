@@ -22,10 +22,8 @@ import yorickbm.towerdefence.Mobs.Monster;
 import yorickbm.towerdefence.enums.Team;
 import yorickbm.towerdefence.towers.Tower;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -53,10 +51,11 @@ public class Arena {
     private List<Chunk> _chunksA, _chunksB;
     private int waveIndex = 0;
 
-    private BukkitRunnable timer;
+    private BukkitRunnable timer, waveController;
     private List<Chunk> _passedChunks;
 
     private BlockFace _spawnDirection = BlockFace.NORTH;
+    private double _duration = 10;
 
     //Some constructors
     public Arena(JsonConfig jsonConfig) {
@@ -81,6 +80,25 @@ public class Arena {
         _spawnDirection = BlockFace.valueOf(jsonConfig.getString("spawnDirection"));
         _directionBlock = Material.valueOf(jsonConfig.getString("directionBlock"));
         _finishBlock = Material.valueOf(jsonConfig.getString("finishBlock"));
+
+        _duration = jsonConfig.getInteger("duration");
+
+        JSONArray data = jsonConfig.getArray("Waves");
+        for(int i = 0; i < data.size(); i++) {
+
+            Wave wave = new Wave();
+            JSONObject obj = (JSONObject) data.get(i);
+            obj.forEach((k, v) -> {
+                String className = k.toString();
+                int amount = Integer.parseInt(v.toString());
+
+                Optional<ArenaMob> mob = TowerDefence.getInstance().getMobs().stream()
+                        .filter(am -> am.getClass().getSimpleName().equals(className)).findFirst();
+                if(mob.isPresent()) wave.addMob(mob.get(), amount);
+
+            });
+            _waves.add(wave);
+        }
     }
 
     public Arena() {
@@ -104,6 +122,7 @@ public class Arena {
      */
     public void clean() {
         if(timer != null) timer.cancel();
+        if(waveController != null) waveController.cancel();
 
         //kill all mobs in arena world
         for(ArenaMob entity : _entities) entity.destroy(); //.damage(entity.getHealth());
@@ -160,18 +179,50 @@ public class Arena {
     }
 
     /**
-     * Spawn a zombie for both teams!
+     * Spawn a specific amount of mobs for specific amount of team
+     *
+     * @param mob - Mob to spawn
+     * @param amount - Amount to spawn
+     * @param teamA - Spawn for team a?
+     * @param teamB - Spawn for team b?
      */
-    private void spawnZombie() {
-        System.out.println("Running wave task!");
-
+    public void spawnMob(ArenaMob mob, Integer amount, boolean teamA, boolean teamB) {
         Location spawnLocationA = new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
                 _spawnTeamA.getX(), _spawnTeamA.getY(), _spawnTeamA.getZ());
         Location spawnLocationB = new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ());
 
-        _entities.add(new Monster(_cornersA, spawnLocationA));
-        _entities.add(new Monster(_cornersB, spawnLocationB));
+        System.out.println("Got to spawn " + amount + "x " + mob.getClass().getSimpleName());
+        for(int i = 0; i < amount; i++) {
+            new BukkitRunnable(){
+
+                @Override
+                public void run() {
+                    if(waveController.isCancelled()) {
+                        this.cancel();
+                        return;
+                    }
+
+                    Location locationA = spawnLocationA.clone();
+                    Location locationB = spawnLocationB.clone();
+
+                    switch(_spawnDirection) {
+                        case NORTH, SOUTH -> {
+                            locationA.add(ThreadLocalRandom.current().nextInt(-2, 2), 0, 0);
+                            locationB.add(ThreadLocalRandom.current().nextInt(-2, 2), 0, 0); }
+                        case WEST, EAST -> {
+                            locationA.add(0, 0, ThreadLocalRandom.current().nextInt(-2, 2));
+                            locationB.add(0, 0, ThreadLocalRandom.current().nextInt(-2, 2)); }
+                    }
+
+                    if(teamA) _entities.add(((ArenaMob)mob.Clone()).setPath(_cornersA).spawn(locationA, _spawnDirection));
+                    if(teamB) _entities.add(((ArenaMob)mob.Clone()).setPath(_cornersB).spawn(locationB, _spawnDirection));
+
+                }
+            }.runTaskLater(TowerDefence.getInstance(), i * 12);
+
+
+        }
 
     }
 
@@ -189,6 +240,15 @@ public class Arena {
             }
         };
         timer.runTaskTimer(TowerDefence.getInstance(), 5*20, 10);
+
+        long minutes = (long) ((1 * 60 * 20) * (_duration / _waves.size()));
+        waveController = new BukkitRunnable() {
+            @Override
+            public void run() {
+                spawnNextWave();
+            }
+        };
+        waveController.runTaskTimer(TowerDefence.getInstance(), 5*20, minutes);
 
         //TODO: Make it fill teams evenly
         int randoms = 0;
@@ -221,8 +281,6 @@ public class Arena {
 
         for(Chunk chunk : _chunksA) chunk.setForceLoaded(true);
         for(Chunk chunk : _chunksB) chunk.setForceLoaded(true);
-
-        spawnZombie();
     }
 
     /**
@@ -293,19 +351,6 @@ public class Arena {
         return entity.teleport(spawn);
     }
 
-    @Override
-    public String toString() {
-        return "{" +
-                ",buildBlock='" + _buildBlock.toString() + '\'' +
-                ",arenaWorld='" + _arenaWorld + '\'' +
-                ",spawnTeamA='" + _spawnTeamA.toString() + '\''+
-                ",spawnTeamB='" + _spawnTeamB.toString() + '\'' +
-                ",lobbyLocation='" + _lobbyLocation.toString() + '\'' +
-                ",lobbyWorld='" + _lobbyWorld + '\'' +
-                '}';
-    }
-
-
     /**
      * Convert class to jsonConfig
      * @return JSONObject to save to JsonConfig!
@@ -335,6 +380,7 @@ public class Arena {
         buildBlock.put("teamB", teamB);
 
         data.put("buildBlock", buildBlock);
+        data.put("duration", _duration);
 
         return data;
     }
@@ -366,7 +412,20 @@ public class Arena {
     public void removePlayer(Player p) { _teams.removeIf(d -> d.getKey().equals(p.getUniqueId())); }
 
     public void spawnNextWave() {
-        Wave waveToSpawn = _waves.get(waveIndex++);
+        _waves.get(waveIndex++).spawn(this);
+
+        long minutes = (long) (_duration / _waves.size());
+        for(UUID uuid : getPlayers()) {
+            Bukkit.getPlayer(uuid).sendMessage(
+                    _waves.size() > waveIndex ?
+                    "Next wave starts in " + minutes + " minutes!"
+                    : "Armageddon starts in 5 minutes!"); //TODO Move to config
+        }
+
+        if(_waves.size() <= waveIndex) {
+            waveController.cancel();
+            //TODO: Start Armageddon time!!! (10 minutes death stats in 5 minutes!)
+        }
     }
 
     int _id = 0;
@@ -374,5 +433,4 @@ public class Arena {
     public int getID() {
         return _id;
     }
-
 }

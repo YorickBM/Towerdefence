@@ -35,13 +35,11 @@ import java.util.logging.Level;
 //TODO: Tower owner???? Is kinda annoying tbh
 //TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
 //TODO: Make END points so other plugins can build on top of this one
-//TODO: Arena as JSON
-//TODO: Prevent teams building on each others map
 //TODO: Prevent teams from upgrading or destroying buildings from other team
-//TODO: Waves in arena JSON
-//TODO: Allow multiple placeable materials!
 //TODO: Fix so you can overlap error areas without breaking the map
 //TODO: Place buttons, signs, carpet, item_frame last/Remove first
+//TODO: Client sided blocks
+//TODO: Random location on rotate, spawn & castle (Kinda like an army right now)
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
@@ -73,6 +71,14 @@ public final class TowerDefence extends JavaPlugin {
 
         //Create reflection load folders
 
+        //Load mobs (reflection...)
+        try {
+            _mobs = loadCustomData(getDataFolder() + "/mobs");
+        } catch (IOException | NoSuchMethodException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        getLogger().log(Level.INFO, String.format("Loaded (%d) mobs!!", _mobs.size()));
+
         //Load arenas
         loadArenas();
         getLogger().log(Level.INFO, String.format("Loaded (%d) arenas!!", _arenas.size()));
@@ -84,14 +90,6 @@ public final class TowerDefence extends JavaPlugin {
             e.printStackTrace();
         }
         getLogger().log(Level.INFO, String.format("Loaded (%d) towers!!", _towers.size()));
-
-        //Load mobs (reflection...)
-        try {
-            _mobs = loadCustomData(getDataFolder() + "/mobs");
-        } catch (IOException | NoSuchMethodException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        getLogger().log(Level.INFO, String.format("Loaded (%d) mobs!!", _mobs.size()));
 
         //Load GUIS
         InventoryGui builderGui = new InventoryGui("Buildings", 3) { };
@@ -109,7 +107,7 @@ public final class TowerDefence extends JavaPlugin {
             builderGui.addItem(new GuiItem(twr.getIcon(), slot++, 1).setName(twr.getName()).setLore(twr.getDescription()).setOnClick(p -> {
                 if(!isPlayerInArena(p)) {
                     p.sendMessage("You can only place a building if you are part of an arena!");
-                    //return; TODO Temp override
+                    return;
                 }
 
                 if(p.getLocation().clone().subtract(0, 1,0).getBlock().getType().isAir()) {
@@ -237,5 +235,9 @@ public final class TowerDefence extends JavaPlugin {
 
         if(result.isPresent()) return result.get();
         return null;
+    }
+
+    public List<ArenaMob> getMobs() {
+        return _mobs;
     }
 }
