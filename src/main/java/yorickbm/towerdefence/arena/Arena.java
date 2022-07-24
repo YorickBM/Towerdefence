@@ -1,5 +1,6 @@
 package yorickbm.towerdefence.arena;
 
+import com.google.common.collect.ImmutableList;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -127,9 +128,6 @@ public class Arena {
         if(timer != null) timer.cancel();
         if(waveController != null) waveController.cancel();
 
-        //kill all mobs in arena world
-        for(ArenaMob entity : _entities) entity.destroy(); //.damage(entity.getHealth());
-
         //remove all buildings
         for(Tower tower : _towers) tower.destroy();
         _towers.clear();
@@ -144,6 +142,11 @@ public class Arena {
 
         _castleA.destory();
         _castleB.destory();
+
+        //kill all mobs in arena world
+        for(ArenaMob entity : _entities) { //TODO Fix this kills to many to quick :3
+            entity.destroy(true); //.damage(entity.getHealth());
+        }
     }
 
     /**
@@ -458,5 +461,21 @@ public class Arena {
             default -> throw new TeamNotFoundException();
         }
 
+    }
+
+    public ImmutableList<ArenaMob> getEntities() {
+        return ImmutableList.copyOf(_entities);
+    }
+    public void removeEntity(ArenaMob mob) {
+        _entities.remove(mob);
+    }
+    public ArenaMob getMobForEntity(Entity entity) {
+        Optional<ArenaMob> mob = _entities.stream().filter(m -> m.equals(entity)).findFirst();
+        if(mob.isPresent()) return mob.get();
+        return null;
+    }
+
+    public void removeTower(Tower tower) {
+        _towers.remove(tower);
     }
 }

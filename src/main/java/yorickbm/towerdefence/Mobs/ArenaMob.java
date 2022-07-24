@@ -11,7 +11,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import yorickbm.towerdefence.TowerDefence;
-import yorickbm.towerdefence.arena.Arena;
 import yorickbm.towerdefence.arena.Castle;
 
 import java.lang.reflect.InvocationTargetException;
@@ -192,13 +191,17 @@ public abstract class ArenaMob {
 
     /**
      * Kill schedules & entity if still alive
+     * @param killEntity - Should the entity be killed?
      */
-    public void destroy() {
+    public void destroy(boolean killEntity) {
         if(!tickUpdater.isCancelled()) tickUpdater.cancel();
 
-        if(entity.isDead()) return;
+        if(entity.isDead() || !killEntity) return;
         LivingEntity le = ((LivingEntity)entity);
         le.damage(le.getHealth());
+    }
+    public void destroy() {
+        destroy(true);
     }
 
     /**
@@ -222,4 +225,6 @@ public abstract class ArenaMob {
 
         return (T) instance;
     }
+
+    public Entity getEntity() { return entity; }
 }

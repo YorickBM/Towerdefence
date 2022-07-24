@@ -1,6 +1,7 @@
 package yorickbm.towerdefence;
 
 import com.google.common.collect.ImmutableList;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.API.Exceptions.TeamNotFoundException;
@@ -11,6 +12,7 @@ import yorickbm.towerdefence.towers.Tower;
 
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TowerDefenceApi {
 
@@ -128,6 +130,29 @@ public class TowerDefenceApi {
             return -1;
         }
 
+    }
+
+    public boolean isArenaMob(Entity entity) {
+        AtomicBoolean isArenaMob = new AtomicBoolean(false);
+        core.getArenas().forEach(arena -> {
+            arena.getEntities().forEach(am -> {
+                if(am.getEntity().getEntityId()==entity.getEntityId()) isArenaMob.set(true);
+            });
+        });
+        return isArenaMob.get();
+    }
+
+    public Arena getArenaForMob(Entity entity) {
+        Optional<Arena> result = core.getArenas().stream().filter(arena -> {
+            AtomicBoolean isTrue = new AtomicBoolean(false);
+            arena.getEntities().forEach(am -> {
+                if(am.getEntity().getEntityId()==entity.getEntityId()) isTrue.set(true);
+            });
+            return isTrue.get();
+        }).findFirst();
+
+        if(!result.isPresent()) return null;
+        return result.get();
     }
 
 }

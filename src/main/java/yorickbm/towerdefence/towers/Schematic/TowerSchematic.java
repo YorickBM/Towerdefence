@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
@@ -13,16 +14,26 @@ import java.util.List;
 public class TowerSchematic {
 
     final List<SchematicBlock> _blocks;
+    final List<SchematicBlock> _decoration;
 
     public TowerSchematic(Location A, Location B) {
-        _blocks = findLocations(A, B);
+        List<SchematicBlock> result = findLocations(A, B);
+        _decoration = result.stream().filter(sb -> !sb.material.isSolid()).collect(Collectors.toList());
+
+        result.removeAll(_decoration);
+        _blocks = result;
     }
 
     public TowerSchematic(String data) {
-        _blocks = new ArrayList<>();
+        List<SchematicBlock> result  = new ArrayList<>();
 
         if(data.length() >= 5)
-            for(String block : data.split("\n")) _blocks.add(new SchematicBlock( block));
+            for(String block : data.split("\n")) result.add(new SchematicBlock( block));
+
+        _decoration = result.stream().filter(sb -> !sb.material.isSolid()).collect(Collectors.toList());
+
+        result.removeAll(_decoration);
+        _blocks = result;
     }
 
     public void build(Location location) {
@@ -31,10 +42,18 @@ public class TowerSchematic {
             block.setType(sb.material);
             block.setBlockData(sb.data);
         });
+        _decoration.forEach(sb -> {
+            Block block = location.clone().add(sb.location.getX(), sb.location.getY(), sb.location.getZ()).getBlock();
+            block.setType(sb.material);
+            block.setBlockData(sb.data);
+        });
     }
 
     public void destroy(Location location) {
 
+        _decoration.forEach(sb -> {
+            location.clone().add(sb.location.getX(), sb.location.getY(), sb.location.getZ()).getBlock().setType(Material.AIR);
+        });
         _blocks.forEach(sb -> {
             location.clone().add(sb.location.getX(), sb.location.getY(), sb.location.getZ()).getBlock().setType(Material.AIR);
         });
@@ -77,8 +96,9 @@ public class TowerSchematic {
         StringBuilder builder = new StringBuilder();
 
         for(SchematicBlock block : _blocks) builder.append(block.toString() + "\n");
+        for(SchematicBlock block : _decoration) builder.append(block.toString() + "\n");
 
-        return builder.toString();
+        return builder.toString().substring(0, builder.toString().lastIndexOf("\n"));
     }
 
 }

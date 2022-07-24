@@ -9,8 +9,6 @@ import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
 
-import java.util.Random;
-
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
  */

@@ -96,7 +96,9 @@ public abstract class Tower {
         _schematics[relativeLevel].destroy(relativeLocation);
 
         for(ArmorStand armorStand : _armorStands) armorStand.remove();
+        TowerLevel = 0;
 
+        getArena().removeTower(this);
     }
 
     /**
@@ -176,7 +178,7 @@ public abstract class Tower {
 
         //Add building to arena as checkable instance
         _activeArena.addBuilding(this);
-
+        _owner = player.getUniqueId();
         Upgrade(player);
         player.teleport(relativeLocation.clone().add(0, 6, 0));
     }

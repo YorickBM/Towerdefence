@@ -1,9 +1,8 @@
 package yorickbm.towerdefence;
 
-import org.bukkit.Bukkit;
+import org.bstats.bukkit.Metrics;
+
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.API.JsonConfig;
@@ -19,7 +18,9 @@ import yorickbm.towerdefence.commands.JoinArenaCommand;
 import yorickbm.towerdefence.commands.StartArenaCommand;
 import yorickbm.towerdefence.commands.StopArenaCommand;
 import yorickbm.towerdefence.configuration.ConfigManager;
+import yorickbm.towerdefence.events.EntityDeathEventListener;
 import yorickbm.towerdefence.events.InteractBuildingEvent;
+import yorickbm.towerdefence.events.SomeEventListener;
 import yorickbm.towerdefence.towers.Tower;
 
 import javax.tools.JavaCompiler;
@@ -33,8 +34,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.logging.Level;
 
-//TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
-//TODO: Place buttons, signs, carpet, item_frame last/Remove first
 //TODO: Random location on rotate, spawn & castle (Kinda like an army right now)
 //TODO: Last wave not spawning
 //TODO: Armageddon implementation
@@ -68,6 +67,8 @@ public final class TowerDefence extends JavaPlugin {
         _plugin = this;
         _api = new TowerDefenceApi(this);
         _scfgm = new ConfigManager().Initialize("arenas.yml");
+
+        Metrics metrics = new Metrics(this, 15916);
 
         //Load commands
         getCommand("startArena").setExecutor(new StartArenaCommand());
@@ -136,6 +137,8 @@ public final class TowerDefence extends JavaPlugin {
         //Register events
         getServer().getPluginManager().registerEvents(new OpenGUIEvent(), this);
         getServer().getPluginManager().registerEvents(new InteractBuildingEvent(), this);
+        getServer().getPluginManager().registerEvents(new EntityDeathEventListener(), this);
+        getServer().getPluginManager().registerEvents(new SomeEventListener(), this);
 
         //Load permissions
         //TODO

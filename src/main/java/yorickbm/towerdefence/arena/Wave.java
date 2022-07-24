@@ -1,10 +1,7 @@
 package yorickbm.towerdefence.arena;
 
-import org.bukkit.block.Block;
-import org.json.simple.JSONObject;
 import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.Mobs.ArenaMob;
-import yorickbm.towerdefence.TowerDefence;
 
 import java.util.ArrayList;
 import java.util.List;
