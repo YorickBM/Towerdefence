@@ -135,8 +135,8 @@ public abstract class Tower {
                     @Override
                     public void run() {
                         int index = 0;
-                        for (Block block : altered.stream().map(d -> d.getKey()).collect(Collectors.toList())) {
-                            block.setType(index++ % 2 == 0 ? Material.BLACK_WOOL : Material.YELLOW_WOOL);
+                        for (Block block : _blocksBelow.stream().map(d -> d.getKey()).collect(Collectors.toList())) {
+                            player.sendBlockChange(block.getLocation(), Material.WHITE_WOOL, index++ % 2 == 0 ? (byte)15 : (byte)4);
                         }
                     }
                 });
@@ -144,8 +144,8 @@ public abstract class Tower {
                     @Override
                     public void run() {
                         int index = 0;
-                        for (Block block : altered.stream().map(d -> d.getKey()).collect(Collectors.toList())) {
-                            block.setType(index++ % 2 == 1 ? Material.BLACK_WOOL : Material.YELLOW_WOOL);
+                        for (Block block : _blocksBelow.stream().map(d -> d.getKey()).collect(Collectors.toList())) {
+                            player.sendBlockChange(block.getLocation(), Material.WHITE_WOOL, index++ % 2 == 1 ? (byte)15 : (byte)4);
                         }
                     }
                 });
@@ -155,8 +155,8 @@ public abstract class Tower {
             errorsRunnables.add(new BukkitRunnable() {
                 @Override
                 public void run() {
-                    for(Pair<Block, Material> data : altered) {
-                        data.getKey().setType(data.getValue());
+                    for(Pair<Block, Material> data : _blocksBelow) {
+                        player.sendBlockChange(data.getKey().getLocation(), data.getValue(), data.getKey().getData());
                     }
                 }
             });

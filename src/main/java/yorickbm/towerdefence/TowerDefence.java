@@ -34,12 +34,8 @@ import java.util.logging.Level;
 //TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
 //TODO: Make END points so other plugins can build on top of this one
 //TODO: Prevent teams from upgrading or destroying buildings from other team
-//TODO: Fix so you can overlap error areas without breaking the map
 //TODO: Place buttons, signs, carpet, item_frame last/Remove first
-//TODO: Client sided blocks
 //TODO: Random location on rotate, spawn & castle (Kinda like an army right now)
-
-//Elke seconde 5 coins
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)
