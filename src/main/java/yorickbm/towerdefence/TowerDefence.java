@@ -28,9 +28,13 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -77,7 +81,8 @@ public final class TowerDefence extends JavaPlugin {
         getCommand("createTower").setExecutor(new CreateTowerCommand());
 
         //Create reflection load folders
-        //TODO
+        downloadFromGithub("/mobs", "https://raw.githubusercontent.com/YorickBM/Towerdefence/master/Custom/Mobs");
+        downloadFromGithub("/towers", "https://raw.githubusercontent.com/YorickBM/Towerdefence/master/Custom/Towers");
 
         //Load mobs (reflection...)
         try {
@@ -237,4 +242,38 @@ public final class TowerDefence extends JavaPlugin {
     public List<Arena> getArenas() { return  _arenas; }
     public List<Tower> getTowers() { return _towers; }
     public List<ArenaMob> getMobs() { return _mobs; }
+
+    private void download(String downloadURL, String fileName) throws IOException
+    {
+        URL website = new URL(downloadURL);
+
+        try (InputStream inputStream = website.openStream())
+        {
+            Files.copy(inputStream, Paths.get(fileName), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private void downloadFromGithub(String folder, String baseUrl) {
+        File directory = new File(getDataFolder() + folder);
+        if(!directory.exists())  directory.mkdir();
+        File dataFolder = new File(directory.getAbsolutePath() + "/noupdate.git");
+        if(dataFolder.exists()) return;
+
+        try {
+            download(baseUrl + "/directory.data", directory.getAbsolutePath() + "/data.temp");
+            File dataFile = new File(directory.getPath() + "/data.temp");
+            if(dataFile.exists()) {
+                String data = Files.readString(Paths.get(dataFile.getPath()));
+                String[] files = data.split("\n");
+
+                for(String f : files) {
+                    if(!(new File(directory.getAbsolutePath() + "/" + f)).exists())
+                        download(baseUrl + "/" + f, directory.getAbsolutePath() + "/" + f);
+                }
+                dataFile.delete();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

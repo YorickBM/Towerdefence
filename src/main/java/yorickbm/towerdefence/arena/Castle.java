@@ -61,8 +61,8 @@ public class Castle {
      * Remove all data from the world
      */
     public void destory() {
-        _dataRepresentation.remove();
-        _title.remove();
+        if(_dataRepresentation != null) _dataRepresentation.remove();
+        if(_title != null) _title.remove();
     }
 
     /**
