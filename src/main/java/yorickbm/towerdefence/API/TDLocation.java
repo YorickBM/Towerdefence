@@ -1,5 +1,6 @@
 package yorickbm.towerdefence.API;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 /**
@@ -49,5 +50,9 @@ public class TDLocation {
     }
     public void setX(float x) {
         this.x = x;
+    }
+
+    public Location toLocation(String world) {
+        return new Location(Bukkit.getWorld(world), x, y, z);
     }
 }

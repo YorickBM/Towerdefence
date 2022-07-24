@@ -10,6 +10,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
+import yorickbm.towerdefence.arena.Castle;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -21,12 +22,18 @@ import java.util.concurrent.ThreadLocalRandom;
 public abstract class ArenaMob {
 
     protected Entity entity;
+    protected EntityType entityType;
+
     protected float tick_speed = 0.03f; //Every 20th of a second it moves 0.03 of a block
     protected float tick_attack = 3*20; //Every 3 seconds it attacks
-    protected List<Block> path;
+    protected double attack_damage = 3; //Damage to castle on hit (Randomness applied)
+
+    private List<Block> path;
+    private Castle castle;
+
     private int step_index = 0;
     private int attack_index = 0;
-    protected EntityType entityType;
+
     private BlockFace direction;
     private Location finalLocation;
 
@@ -122,8 +129,8 @@ public abstract class ArenaMob {
             LivingEntity le = ((LivingEntity)entity);
             le.swingMainHand();
 
-
-            //TODO Damage correct tower!!
+            le.damage(ThreadLocalRandom.current().nextDouble(0.20, 0.85)); //Every attack kosts the mob between 0.20 and 0.85 health.
+            if(castle != null) castle.applyDamage(ThreadLocalRandom.current().nextDouble(attack_damage*0.66, attack_damage));
         }
     }
 
@@ -139,6 +146,11 @@ public abstract class ArenaMob {
 
     public ArenaMob setPath(List<Block> path) {
         this.path = path;
+        return this;
+    }
+
+    public ArenaMob setCastle(Castle castle) {
+        this.castle = castle;
         return this;
     }
 

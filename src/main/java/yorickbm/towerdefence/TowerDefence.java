@@ -30,8 +30,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.logging.Level;
 
-//TODO: Mobs attack castle
-//TODO: Castle damage mobs that attack (Kind of thorns or so)
 //TODO: Tower owner???? Is kinda annoying tbh
 //TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
 //TODO: Make END points so other plugins can build on top of this one
@@ -40,6 +38,8 @@ import java.util.logging.Level;
 //TODO: Place buttons, signs, carpet, item_frame last/Remove first
 //TODO: Client sided blocks
 //TODO: Random location on rotate, spawn & castle (Kinda like an army right now)
+
+//Elke seconde 5 coins
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)

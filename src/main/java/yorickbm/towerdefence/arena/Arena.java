@@ -50,6 +50,7 @@ public class Arena {
     private List<Block> _cornersA, _cornersB;
     private List<Chunk> _chunksA, _chunksB;
     private int waveIndex = 0;
+    private Castle _castleA, _castleB;
 
     private BukkitRunnable timer, waveController;
     private List<Chunk> _passedChunks;
@@ -76,6 +77,9 @@ public class Arena {
         _spawnTeamA = new TDLocation().fromString(jsonConfig.getString("spawnTeamA"));
         _spawnTeamB = new TDLocation().fromString(jsonConfig.getString("spawnTeamB"));
         _lobbyLocation = new TDLocation().fromString(jsonConfig.getString("lobbyLocation"));
+
+        _castleA = new Castle(_arenaWorld, new TDLocation().fromString(jsonConfig.getString("castleA")), 1000);
+        _castleB = new Castle(_arenaWorld, new TDLocation().fromString(jsonConfig.getString("castleB")), 1000);
 
         _spawnDirection = BlockFace.valueOf(jsonConfig.getString("spawnDirection"));
         _directionBlock = Material.valueOf(jsonConfig.getString("directionBlock"));
@@ -138,6 +142,9 @@ public class Arena {
         //Unload all chunks
         for(Chunk chunk : _chunksA) chunk.unload(true);
         for(Chunk chunk : _chunksB) chunk.unload(true);
+
+        _castleA.destory();
+        _castleB.destory();
     }
 
     /**
@@ -215,8 +222,8 @@ public class Arena {
                             locationB.add(0, 0, ThreadLocalRandom.current().nextInt(-2, 2)); }
                     }
 
-                    if(teamA) _entities.add(((ArenaMob)mob.Clone()).setPath(_cornersA).spawn(locationA, _spawnDirection));
-                    if(teamB) _entities.add(((ArenaMob)mob.Clone()).setPath(_cornersB).spawn(locationB, _spawnDirection));
+                    if(teamA) _entities.add(((ArenaMob)mob.Clone()).setPath(_cornersA).setCastle(_castleA).spawn(locationA, _spawnDirection));
+                    if(teamB) _entities.add(((ArenaMob)mob.Clone()).setPath(_cornersB).setCastle(_castleB).spawn(locationB, _spawnDirection));
 
                 }
             }.runTaskLater(TowerDefence.getInstance(), i * 12);
@@ -249,6 +256,9 @@ public class Arena {
             }
         };
         waveController.runTaskTimer(TowerDefence.getInstance(), 5*20, minutes);
+
+        _castleA.generate();
+        _castleB.generate();
 
         //TODO: Make it fill teams evenly
         int randoms = 0;
