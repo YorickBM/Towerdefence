@@ -36,6 +36,12 @@ import java.util.logging.Level;
 //TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
 //TODO: Place buttons, signs, carpet, item_frame last/Remove first
 //TODO: Random location on rotate, spawn & castle (Kinda like an army right now)
+//TODO: Last wave not spawning
+//TODO: Armageddon implementation
+//TODO: Arena wizard command
+//TODO: Utility UI
+//TODO: Permissions
+//TODO: Tower UI dynamic
 
 /**
  * Author: YorickBM (https://www.spigotmc.org/members/yorick.111571/)

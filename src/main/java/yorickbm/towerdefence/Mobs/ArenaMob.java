@@ -1,6 +1,8 @@
 package yorickbm.towerdefence.Mobs;
 
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -27,6 +29,7 @@ public abstract class ArenaMob {
     protected float tick_speed = 0.03f; //Every 20th of a second it moves 0.03 of a block
     protected float tick_attack = 3*20; //Every 3 seconds it attacks
     protected double attack_damage = 3; //Damage to castle on hit (Randomness applied)
+    protected double max_health = 20;
 
     private List<Block> path;
     private Castle castle;
@@ -144,24 +147,52 @@ public abstract class ArenaMob {
 
     public ArenaMob() {}
 
+    /**
+     * Set the path the mob needs to travel by giving a list of corner blocks that are directional
+     * @param path - List of blocks that it has to go to (DIRECTIONAL BLOCKS!)
+     * @return  - The class so you can continue executing on one line
+     */
     public ArenaMob setPath(List<Block> path) {
         this.path = path;
         return this;
     }
 
+    /**
+     * Set the castle this entity attacks when end block reached!
+     * @param castle - Castle instance
+     * @return - The class so you can continue executing on one line
+     */
     public ArenaMob setCastle(Castle castle) {
         this.castle = castle;
         return this;
     }
 
+    /**
+     * Spawn the entity at a specific location and facing direction
+     * @param location - Location to spawn entity
+     * @param direction - Direction entity should face on spawn
+     * @return - The class so you can continue executing on one line
+     */
     public ArenaMob spawn(Location location, BlockFace direction) {
         this.direction = direction;
         entity = location.getWorld().spawnEntity(location, entityType);
         tickUpdater.runTaskTimer(TowerDefence.getPlugin(), 8, 1);
 
+        if(!entity.isDead()) {
+            LivingEntity le = (LivingEntity)entity;
+
+            AttributeInstance attribute = le.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            attribute.setBaseValue(max_health);
+
+            le.setHealth(max_health);
+        }
+
         return this;
     }
 
+    /**
+     * Kill schedules & entity if still alive
+     */
     public void destroy() {
         if(!tickUpdater.isCancelled()) tickUpdater.cancel();
 
@@ -170,6 +201,11 @@ public abstract class ArenaMob {
         le.damage(le.getHealth());
     }
 
+    /**
+     * Create a new instance of current class
+     * @param <T> - Class to cast clone too
+     * @return - New instance of current class
+     */
     public <T> T Clone() {
         Object instance = null;
         try {
