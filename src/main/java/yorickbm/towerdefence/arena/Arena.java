@@ -1,7 +1,5 @@
 package yorickbm.towerdefence.arena;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -13,12 +11,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
+import yorickbm.towerdefence.API.Exceptions.TeamNotFoundException;
 import yorickbm.towerdefence.API.JsonConfig;
 import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.Mobs.ArenaMob;
-import yorickbm.towerdefence.Mobs.Monster;
 import yorickbm.towerdefence.enums.Team;
 import yorickbm.towerdefence.towers.Tower;
 
@@ -96,7 +95,7 @@ public class Arena {
                 String className = k.toString();
                 int amount = Integer.parseInt(v.toString());
 
-                Optional<ArenaMob> mob = TowerDefence.getInstance().getMobs().stream()
+                Optional<ArenaMob> mob = TowerDefence.getApi().getRegisterdMobs().stream()
                         .filter(am -> am.getClass().getSimpleName().equals(className)).findFirst();
                 if(mob.isPresent()) wave.addMob(mob.get(), amount);
 
@@ -194,9 +193,9 @@ public class Arena {
      * @param teamB - Spawn for team b?
      */
     public void spawnMob(ArenaMob mob, Integer amount, boolean teamA, boolean teamB) {
-        Location spawnLocationA = new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
+        Location spawnLocationA = new Location(Bukkit.getServer().getWorld(getWorldName()),
                 _spawnTeamA.getX(), _spawnTeamA.getY(), _spawnTeamA.getZ());
-        Location spawnLocationB = new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
+        Location spawnLocationB = new Location(Bukkit.getServer().getWorld(getWorldName()),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ());
 
         System.out.println("Got to spawn " + amount + "x " + mob.getClass().getSimpleName());
@@ -226,7 +225,7 @@ public class Arena {
                     if(teamB) _entities.add(((ArenaMob)mob.Clone()).setPath(_cornersB).setCastle(_castleB).spawn(locationB, _spawnDirection));
 
                 }
-            }.runTaskLater(TowerDefence.getInstance(), i * 12);
+            }.runTaskLater(TowerDefence.getPlugin(), i * 12);
 
 
         }
@@ -246,7 +245,7 @@ public class Arena {
                 update();
             }
         };
-        timer.runTaskTimer(TowerDefence.getInstance(), 5*20, 10);
+        timer.runTaskTimer(TowerDefence.getPlugin(), 5*20, 10);
 
         long minutes = (long) ((1 * 60 * 20) * (_duration / _waves.size()));
         waveController = new BukkitRunnable() {
@@ -255,7 +254,7 @@ public class Arena {
                 spawnNextWave();
             }
         };
-        waveController.runTaskTimer(TowerDefence.getInstance(), 5*20, minutes);
+        waveController.runTaskTimer(TowerDefence.getPlugin(), 5*20, minutes);
 
         _castleA.generate();
         _castleB.generate();
@@ -263,7 +262,7 @@ public class Arena {
         //TODO: Make it fill teams evenly
         int randoms = 0;
         for(Pair<UUID, Team> data : _teams) {
-            Player player = TowerDefence.getInstance().getServer().getPlayer(data.getKey());
+            Player player = Bukkit.getServer().getPlayer(data.getKey());
 
             player.sendMessage("Game will start in 5 seconds!");
 
@@ -280,12 +279,12 @@ public class Arena {
         }
 
         _passedChunks = new ArrayList<>();
-        _cornersA = loadPath(new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
+        _cornersA = loadPath(new Location(Bukkit.getServer().getWorld(getWorldName()),
                 _spawnTeamA.getX(), _spawnTeamA.getY(), _spawnTeamA.getZ()));
         _chunksA = _passedChunks.stream().collect(Collectors.toList());
 
         _passedChunks = new ArrayList<>();
-        _cornersB = loadPath(new Location(TowerDefence.getInstance().getServer().getWorld(getWorldName()),
+        _cornersB = loadPath(new Location(Bukkit.getServer().getWorld(getWorldName()),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ()));
         _chunksB = _passedChunks.stream().collect(Collectors.toList());
 
@@ -327,7 +326,7 @@ public class Arena {
     public boolean teleportLobby(Entity entity) {
         return entity.teleport(
                 new Location(
-                        TowerDefence.getInstance().getServer().getWorld(_lobbyWorld),
+                        Bukkit.getServer().getWorld(_lobbyWorld),
                         _lobbyLocation.getX(), _lobbyLocation.getY(), _lobbyLocation.getZ()
                 )
         );
@@ -340,7 +339,7 @@ public class Arena {
      */
     public boolean teleportTeamA(Entity entity) {
         Location spawn = new Location(
-                TowerDefence.getInstance().getServer().getWorld(_arenaWorld),
+                Bukkit.getServer().getWorld(_arenaWorld),
                 _spawnTeamA.getX(), _spawnTeamA.getY(), _spawnTeamA.getZ());
         if(entity instanceof Player) ((Player)entity).setCompassTarget(spawn);
 
@@ -354,7 +353,7 @@ public class Arena {
      */
     public boolean teleportTeamB(Entity entity) {
         Location spawn = new Location(
-                TowerDefence.getInstance().getServer().getWorld(_arenaWorld),
+                Bukkit.getServer().getWorld(_arenaWorld),
                 _spawnTeamB.getX(), _spawnTeamB.getY(), _spawnTeamB.getZ());
         if(entity instanceof Player) ((Player)entity).setCompassTarget(spawn);
 
@@ -442,5 +441,22 @@ public class Arena {
     public void setID(int id) { _id = id;}
     public int getID() {
         return _id;
+    }
+
+    public Castle getCastleForPlayer(Player player) throws PlayerNotInArenaException, TeamNotFoundException {
+        Optional<Pair<UUID, Team>> result = _teams.stream().filter(pair -> pair.getKey().equals(player.getUniqueId())).findFirst();
+        if(result.isEmpty()) throw new PlayerNotInArenaException();
+
+        switch (result.get().getValue()) {
+            case RED -> {
+                return _castleA;
+            }
+            case BLUE -> {
+                return _castleB;
+            }
+
+            default -> throw new TeamNotFoundException();
+        }
+
     }
 }

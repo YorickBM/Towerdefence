@@ -42,7 +42,7 @@ public class CreateTowerCommand implements CommandExecutor {
 
         File file = null;
         try {
-            file = new File(TowerDefence.getInstance().getDataFolder() + "/towers/");
+            file = new File(TowerDefence.getPlugin().getDataFolder() + "/towers/");
             file.mkdirs();
             file = new File(file.getPath() + "/" + identifierGen.nextString() + ".java");
             if(!file.createNewFile()) {

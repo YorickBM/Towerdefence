@@ -10,6 +10,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import yorickbm.towerdefence.API.Annotations.TowerLevel;
+import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.API.Pair;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.TowerDefence;
@@ -21,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -45,6 +47,7 @@ public abstract class Tower {
     private List<ArmorStand> _armorStands;
     private List<Pair<Method, TowerLevel>> _collectedData;
     private List<EntityType> _entityBlacklist;
+    private UUID _owner;
 
     public Tower() {
         int maxLevel = 0;
@@ -163,7 +166,7 @@ public abstract class Tower {
 
             int delay = 0;
             for(BukkitRunnable runnable : errorsRunnables) {
-                runnable.runTaskLater(TowerDefence.getInstance(), delay);
+                runnable.runTaskLater(TowerDefence.getPlugin(), delay);
                 delay += 8;
             }
             errorsRunnables.clear();
@@ -249,7 +252,7 @@ public abstract class Tower {
 
         try {
             if(TowerLevel > _triggersForLevel.length) {
-                TowerDefence.getInstance().getLogger().log(Level.SEVERE, String.format("Tower %s has reached a level higher then possible %d of %d", Name, TowerLevel, _triggersForLevel.length));
+                TowerDefence.getPlugin().getLogger().log(Level.SEVERE, String.format("Tower %s has reached a level higher then possible %d of %d", Name, TowerLevel, _triggersForLevel.length));
                 return; //Level not in range!!!
             }
 
@@ -329,7 +332,20 @@ public abstract class Tower {
     public String getName() { return Name; }
     public String getDescription() { return Description; }
     public int getLevel() { return TowerLevel; }
+    public double getCooldown() { return Cooldown; }
+    public int getRange() { return Range; }
 
     public TDLocation getLocation() { return _location; }
     public Arena getArena() { return _activeArena; }
+
+    public Player getOwner() { return Bukkit.getPlayer(_owner); }
+    public boolean isOwner(Player player) { return player.getUniqueId().equals(_owner); }
+    public boolean isOwnerOnline() { return Bukkit.getOnlinePlayers().contains(getOwner()); }
+    public boolean canUpgrade(Player player) {
+        try {
+            return TowerDefence.getApi().getArenaForPlayer(player).equals(TowerDefence.getApi().getArenaForPlayer(getOwner())) || isOwner(player);
+        } catch (PlayerNotInArenaException e) {
+            return false;
+        }
+    }
 }

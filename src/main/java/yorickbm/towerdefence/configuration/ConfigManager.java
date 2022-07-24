@@ -16,7 +16,7 @@ public class ConfigManager {
 
     public ConfigManager Initialize(String file) {
         try {
-            File dataFolder = TowerDefence.getInstance().getDataFolder();
+            File dataFolder = TowerDefence.getPlugin().getDataFolder();
             if (!dataFolder.exists()) dataFolder.mkdir();
 
             this.Setupf = new File(dataFolder, file);
@@ -29,7 +29,7 @@ public class ConfigManager {
     }
 
     public ConfigManager LoadDefaults() {
-        TowerDefence.getInstance().saveResource(Setupf.getName(), false);
+        TowerDefence.getPlugin().saveResource(Setupf.getName(), false);
         return this;
     }
 

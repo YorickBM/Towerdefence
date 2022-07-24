@@ -5,6 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
 
@@ -32,16 +33,20 @@ public class JoinArenaCommand implements CommandExecutor {
 
             //TODO Check permission
 
-            if(TowerDefence.getInstance().isPlayerInArena((Player)sender)) {
-                TowerDefence.getInstance().getArenaForPlayer((Player)sender).removePlayer((Player)sender);
+            if(TowerDefence.getApi().isPlayerInArena((Player)sender)) {
+                try {
+                    TowerDefence.getApi().getArenaForPlayer((Player)sender).removePlayer((Player)sender);
+                } catch (PlayerNotInArenaException e) {
+                    e.printStackTrace();
+                }
             }
 
         }
 
         Arena arenaClass = null;
-        if(args.length >= 1) arenaClass = TowerDefence.getInstance().getArena(Integer.parseInt(args[0]));
+        if(args.length >= 1) arenaClass = TowerDefence.getApi().getArena(Integer.parseInt(args[0]));
         else {
-            arenaClass = TowerDefence.getInstance().getArenas().get(new Random().nextInt(TowerDefence.getInstance().getArenas().size()));
+            arenaClass = TowerDefence.getApi().getArena(null);
         }
 
         if(arenaClass == null) {

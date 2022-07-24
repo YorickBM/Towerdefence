@@ -157,7 +157,7 @@ public abstract class ArenaMob {
     public ArenaMob spawn(Location location, BlockFace direction) {
         this.direction = direction;
         entity = location.getWorld().spawnEntity(location, entityType);
-        tickUpdater.runTaskTimer(TowerDefence.getInstance(), 8, 1);
+        tickUpdater.runTaskTimer(TowerDefence.getPlugin(), 8, 1);
 
         return this;
     }

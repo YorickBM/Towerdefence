@@ -12,6 +12,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.InventoryHolder;
+import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.API.gui.GuiEventRegistry;
 import yorickbm.towerdefence.API.gui.GuiItem;
 import yorickbm.towerdefence.API.gui.InventoryGui;
@@ -34,7 +35,7 @@ public class InteractBuildingEvent implements Listener {
 
     @EventHandler
     public void onDestroy(BlockBreakEvent event) {
-        if(!TowerDefence.getInstance().isPlayerInArena(event.getPlayer())) return;
+        if(!TowerDefence.getApi().isPlayerInArena(event.getPlayer())) return;
 
         //Cancel block break if player inside of arena!!
         event.setCancelled(true);
@@ -43,12 +44,16 @@ public class InteractBuildingEvent implements Listener {
     @EventHandler
     public void onEntityClick(PlayerInteractAtEntityEvent event) {
         //Pre event checks to check if its inside arena requirements.
-        if(!TowerDefence.getInstance().isPlayerInArena(event.getPlayer())) return;
+        if(!TowerDefence.getApi().isPlayerInArena(event.getPlayer())) return;
         if(event.getRightClicked().getType() != EntityType.ARMOR_STAND) return; //Items is not an armorstand
         event.setCancelled(true);
 
         //Set cancelled false for the event if its a regular armorstand in the arena
-        if(!findEntityForTower(event.getPlayer(), event.getRightClicked())) event.setCancelled(false);
+        try {
+            if(!findEntityForTower(event.getPlayer(), event.getRightClicked())) event.setCancelled(false);
+        } catch (PlayerNotInArenaException e) {
+            e.printStackTrace();
+        }
     }
 
     @EventHandler
@@ -56,12 +61,16 @@ public class InteractBuildingEvent implements Listener {
 
         //Pre event checks to check if its inside arena requirements.
         if(!(event.getDamager() instanceof Player)) return;
-        if(!TowerDefence.getInstance().isPlayerInArena((Player)event.getDamager())) return;
+        if(!TowerDefence.getApi().isPlayerInArena((Player)event.getDamager())) return;
         if(event.getEntityType() != EntityType.ARMOR_STAND) return; //Items is not an armorstand
         event.setCancelled(true);
 
         //Set cancelled false for the event if its a regular armorstand in the arena
-        if(!findEntityForTower(event.getDamager(), event.getEntity())) event.setCancelled(false);
+        try {
+            if(!findEntityForTower(event.getDamager(), event.getEntity())) event.setCancelled(false);
+        } catch (PlayerNotInArenaException e) {
+            e.printStackTrace();
+        }
     }
 
     @EventHandler
@@ -78,18 +87,22 @@ public class InteractBuildingEvent implements Listener {
      * @param clicked - Armorstand entity
      * @return - If a tower is found successfully or not.
      */
-    private boolean findEntityForTower(Entity iniator, Entity clicked) {
+    private boolean findEntityForTower(Entity iniator, Entity clicked) throws PlayerNotInArenaException { //TODO Move to config
         //Loop trough all towers in arena and get corresponding stuff
         AtomicBoolean foundTower = new AtomicBoolean(false);
-        TowerDefence.getInstance().getArenaForPlayer((Player)iniator).getTowers().forEach(twr -> {
+        TowerDefence.getApi().getArenaForPlayer((Player)iniator).getTowers().forEach(twr -> {
 
             if(!twr.didYouClickMe(clicked)) return; //Armorstand does not belong to tower!
             InventoryGui upgradeUi = new InventoryGui(twr.getName() + " : Lvl. " + twr.getLevel(), 3) { };
 
-            //TODO Move to config
+            if(!twr.canUpgrade((Player)iniator)) {
+                iniator.sendMessage("You cannot interact with this tower!");
+                return; //Player cannot interact with this tower!
+            }
+
             Float costs = twr.getUpgradeCosts();
-            if(costs >= 0) upgradeUi.addItem(new GuiItem(Material.ANVIL, 10, 1)
-                    .setName("Upgrade to Lvl. "  + twr.getLevel() + 1)
+            if (costs >= 0) upgradeUi.addItem(new GuiItem(Material.ANVIL, 10, 1)
+                    .setName("Upgrade to Lvl. " + twr.getLevel() + 1)
                     .setLore("Upgrade costs: " + costs).setOnClick(p -> {
                         p.closeInventory();
                         twr.Upgrade(p);
@@ -99,13 +112,27 @@ public class InteractBuildingEvent implements Listener {
 
             upgradeUi.addItem(new GuiItem(Material.CRAFTING_TABLE, 13, 1)
                     .setName(twr.getName())
-                    .setLore(twr.getDescription()));
+                    .setLore(twr.getDescription(),
+                            "",
+                            "Tower Information:",
+                            "Owner: " + twr.getOwner().getDisplayName(),
+                            "Range: " + twr.getRange(),
+                            "Cooldown: " + twr.getCooldown()));
 
-            upgradeUi.addItem(new GuiItem(Material.BARRIER, 16, 1)
-                    .setName("Destroy tower").setOnClick(p -> {
-                        p.closeInventory();
-                        twr.destroy();
-                    }));
+            if(twr.isOwner((Player) iniator)) {
+                upgradeUi.addItem(new GuiItem(Material.BARRIER, 16, 1)
+                        .setName("Destroy tower")
+                        .setLore("60% refund!")
+                        .setOnClick(p -> {
+                            p.closeInventory();
+                            twr.destroy();
+                        }));
+            } else { //User is NOT the owner
+                upgradeUi.addItem(new GuiItem(Material.BEDROCK, 16, 1)
+                        .setName("Destroy tower").setLore(
+                                "You cannot destroy this tower, since you are not the owner!"));
+            }
+
             GuiEventRegistry.Register(upgradeUi);
             _activeUpgradeMenus.add(upgradeUi.getHolder());
 

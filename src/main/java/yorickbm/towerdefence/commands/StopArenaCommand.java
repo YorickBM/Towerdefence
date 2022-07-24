@@ -4,6 +4,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.TowerDefence;
 import yorickbm.towerdefence.arena.Arena;
 
@@ -18,11 +19,16 @@ public class StopArenaCommand implements CommandExecutor {
         if (sender instanceof Player) {
             //TODO check permission
 
-            if (!TowerDefence.getInstance().isPlayerInArena((Player) sender) && args.length < 1) {
+            if (!TowerDefence.getApi().isPlayerInArena((Player) sender) && args.length < 1) {
                 sender.sendMessage("Please enter the number of the arena you want to start!");
                 return false;
             } else if (args.length < 1) {
-                arena = TowerDefence.getInstance().getArenaForPlayer((Player) sender).getID();
+                try {
+                    arena = TowerDefence.getApi().getArenaForPlayer((Player) sender).getID();
+                } catch (PlayerNotInArenaException e) {
+                    e.printStackTrace();
+                    return false;
+                }
             } else {
                 arena = Integer.parseInt(args[0]);
             }
@@ -34,7 +40,7 @@ public class StopArenaCommand implements CommandExecutor {
             arena = Integer.parseInt(args[0]);
         }
 
-        Arena arenaClass = TowerDefence.getInstance().getArena(arena);
+        Arena arenaClass = TowerDefence.getApi().getArena(arena);
 
         if(arenaClass == null) {
             sender.sendMessage("Could not find the arena you would like to start!");

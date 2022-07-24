@@ -1,8 +1,11 @@
 package yorickbm.towerdefence;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import yorickbm.towerdefence.API.Exceptions.PlayerNotInArenaException;
 import yorickbm.towerdefence.API.JsonConfig;
 import yorickbm.towerdefence.API.TDLocation;
 import yorickbm.towerdefence.API.gui.GuiEventRegistry;
@@ -30,10 +33,7 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.logging.Level;
 
-//TODO: Tower owner???? Is kinda annoying tbh
 //TODO: Scoreboard IN-Game (Fuck lobby scoreboards XD)
-//TODO: Make END points so other plugins can build on top of this one
-//TODO: Prevent teams from upgrading or destroying buildings from other team
 //TODO: Place buttons, signs, carpet, item_frame last/Remove first
 //TODO: Random location on rotate, spawn & castle (Kinda like an army right now)
 
@@ -43,8 +43,11 @@ import java.util.logging.Level;
  */
 public final class TowerDefence extends JavaPlugin {
 
-    private static TowerDefence instance = null;
-    public static TowerDefence getInstance() { return instance; }
+    private static TowerDefenceApi _api = null;
+    public static TowerDefenceApi getApi() { return _api; }
+
+    private static TowerDefence _plugin = null;
+    public static TowerDefence getPlugin() { return _plugin; }
 
     private ConfigManager _scfgm = null;
     public ConfigManager getConfigManager() { return _scfgm; }
@@ -56,7 +59,8 @@ public final class TowerDefence extends JavaPlugin {
     @Override
     public void onEnable() { // Plugin startup logic
         //Initiate basic things
-        instance = this;
+        _plugin = this;
+        _api = new TowerDefenceApi(this);
         _scfgm = new ConfigManager().Initialize("arenas.yml");
 
         //Load commands
@@ -66,6 +70,7 @@ public final class TowerDefence extends JavaPlugin {
         getCommand("createTower").setExecutor(new CreateTowerCommand());
 
         //Create reflection load folders
+        //TODO
 
         //Load mobs (reflection...)
         try {
@@ -101,7 +106,7 @@ public final class TowerDefence extends JavaPlugin {
         int slot = 10;
         for(Tower twr : _towers) { //TODO Move to config
             builderGui.addItem(new GuiItem(twr.getIcon(), slot++, 1).setName(twr.getName()).setLore(twr.getDescription()).setOnClick(p -> {
-                if(!isPlayerInArena(p)) {
+                if(!TowerDefence.getApi().isPlayerInArena(p)) {
                     p.sendMessage("You can only place a building if you are part of an arena!");
                     return;
                 }
@@ -111,7 +116,11 @@ public final class TowerDefence extends JavaPlugin {
                     return;
                 }
 
-                twr.<Tower>Clone().spawnTower(getArenaForPlayer(p), new TDLocation(p.getLocation()), p);
+                try {
+                    twr.<Tower>Clone().spawnTower(TowerDefence.getApi().getArenaForPlayer(p), new TDLocation(p.getLocation()), p);
+                } catch (PlayerNotInArenaException e) {
+                    e.printStackTrace();
+                }
             }));
         }
         GuiEventRegistry.Register(builderGui);
@@ -121,6 +130,9 @@ public final class TowerDefence extends JavaPlugin {
         //Register events
         getServer().getPluginManager().registerEvents(new OpenGUIEvent(), this);
         getServer().getPluginManager().registerEvents(new InteractBuildingEvent(), this);
+
+        //Load permissions
+        //TODO
 
         //Log that we started up!
         getLogger().log(Level.INFO, String.format("You can start building your towers :D", _arenas.size()));
@@ -148,19 +160,6 @@ public final class TowerDefence extends JavaPlugin {
 
         }
     }
-
-    public boolean isPlayerInArena(Player p) {
-        return getArenaForPlayer(p) != null;
-    }
-    public Arena getArenaForPlayer(Player p) {
-        Optional<Arena> result = _arenas.stream().filter(a -> a.getPlayers().contains(p.getUniqueId())).findFirst();
-
-        if(!result.isPresent()) return null;
-        return result.get();
-    }
-
-    public List<Arena> getArenas() { return  _arenas; }
-    public List<Tower> getTowers() { return _towers; }
 
     JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager sjfm = jc.getStandardFileManager(null, Locale.getDefault(), null);
@@ -226,14 +225,7 @@ public final class TowerDefence extends JavaPlugin {
         return data;
     }
 
-    public Arena getArena(int id) {
-        Optional<Arena> result = _arenas.stream().filter(a -> a.getID() == id).findFirst();
-
-        if(result.isPresent()) return result.get();
-        return null;
-    }
-
-    public List<ArenaMob> getMobs() {
-        return _mobs;
-    }
+    public List<Arena> getArenas() { return  _arenas; }
+    public List<Tower> getTowers() { return _towers; }
+    public List<ArenaMob> getMobs() { return _mobs; }
 }
